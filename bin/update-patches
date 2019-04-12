@@ -1,0 +1,19 @@
+#!/usr/bin/env ksh
+
+if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
+   echo CROSS_OPENBSD_SRC_HOME is missing
+   exit 1
+fi
+
+. "$(dirname $(readlink -f $0))/cross_env"
+
+cd  "${CROSS_OPENBSD_SRC_HOME}/src"
+for O in $(find . -type f -name "*.orig"); do
+    P=${O%.*}
+    diff -uNp $O $P > "${CROSS_OPENBSD_SRC_HOME}/patches/$(echo ${P#??} | sed 's/\//_/g').patch"
+    if [ $? -gt 1 ]; then
+        echo diff for $P failed
+        exit 1
+    fi
+done
+cd -

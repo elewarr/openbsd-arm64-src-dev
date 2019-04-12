@@ -1,0 +1,114 @@
+--- ./sys/dev/fdt/sxitemp.c.orig	Fri Apr 12 23:23:30 2019
++++ ./sys/dev/fdt/sxitemp.c	Fri Apr 12 23:24:57 2019
+@@ -19,6 +19,7 @@
+ #include <sys/systm.h>
+ #include <sys/device.h>
+ #include <sys/sensors.h>
++#include <sys/malloc.h>
+ 
+ #include <machine/intr.h>
+ #include <machine/bus.h>
+@@ -46,6 +47,7 @@
+ #define THS0_DATA			0x0080
+ #define THS1_DATA			0x0084
+ #define THS2_DATA			0x0088
++#define THS_CALIB0			0x0074
+ 
+ #define HREAD4(sc, reg)							\
+ 	(bus_space_read_4((sc)->sc_iot, (sc)->sc_ioh, (reg)))
+@@ -81,8 +83,14 @@ uint64_t sxitemp_r40_calc_temp(int64_t);
+ uint64_t sxitemp_a64_calc_temp(int64_t);
+ uint64_t sxitemp_h5_calc_temp0(int64_t);
+ uint64_t sxitemp_h5_calc_temp1(int64_t);
+-void	sxitemp_refresh_sensors(void *);
++void sxitemp_refresh_sensors(void *);
++void sxitemp_setup_calib(struct sxitemp_softc *,
++	struct fdt_attach_args *);
++void sxitemp_tx(struct sxitemp_softc *, uint32_t, uint32_t, uint32_t *);
++uint32_t sxitemp_calib_mask(uint32_t, uint32_t);
+ 
++extern uint32_t sxisid_read(bus_size_t, uint32_t, uint8_t *);
++
+ int
+ sxitemp_match(struct device *parent, void *match, void *aux)
+ {
+@@ -140,6 +148,8 @@ sxitemp_attach(struct device *parent, struct device *s
+ 		enable = THS_CTRL2_SENSE0_EN | THS_CTRL2_SENSE1_EN;
+ 	}
+ 
++	sxitemp_setup_calib(sc, faa);
++
+ 	/* Start data acquisition. */
+ 	HWRITE4(sc, THS_FILTER, THS_FILTER_EN | THS_FILTER_TYPE(1));
+ 	HWRITE4(sc, THS_INT_CTRL, THS_INT_CTRL_THERMAL_PER(800));
+@@ -236,4 +246,70 @@ sxitemp_refresh_sensors(void *arg)
+ 		sc->sc_sensors[2].value = sc->sc_calc_temp2(data) + 273150000;
+ 		sc->sc_sensors[2].flags &= ~SENSOR_FINVALID;
+ 	}
++}
++
++void
++sxitemp_setup_calib(struct sxitemp_softc *sc, struct fdt_attach_args *faa)
++{
++	int phandle, node, len;
++	uint32_t *reg, *calib, calib_len;
++
++	phandle = OF_getpropint(faa->fa_node, "nvmem-cells", 0);
++	if (phandle == 0) {
++		return;
++	}
++	node = OF_getnodebyphandle(phandle);
++	if (node == 0) {
++		return;
++	}
++	len = OF_getproplen(node, "reg");
++	if (len == 0) {
++		return;
++	}
++	reg = malloc(len, M_TEMP, M_NOWAIT);
++
++	if (reg == NULL) {
++		return;
++	}
++	if (OF_getpropintarray(node, "reg", reg, len) != len) {
++		free(reg, M_TEMP, len);
++		return;
++	}
++	calib_len = (((reg[1] + 7) / 8) * 8);
++	calib = malloc(calib_len, M_TEMP, M_NOWAIT);
++
++	if (calib != NULL) {
++		sxitemp_tx(sc, reg[0], reg[1], calib);
++	}
++	free(calib, M_TEMP, calib_len);
++	free(reg, M_TEMP, len);
++}
++
++void
++sxitemp_tx(struct sxitemp_softc *sc, uint32_t addr, uint32_t len, uint32_t *buff)
++{
++	uint32_t i, calib_mask, calib_val;
++
++	if (sxisid_read(addr, len, (uint8_t *) buff) != len) {
++		return;
++	}
++	for (i = 0; i < len; i += 4) {
++		calib_mask = sxitemp_calib_mask(len, i + 4);
++		calib_val = buff[i / 4] & calib_mask;
++		HWRITE4(sc, THS_CALIB0 + i, calib_val);
++	}
++}
++
++uint32_t
++sxitemp_calib_mask(uint32_t total_len, uint32_t sizeof_len)
++{
++	uint32_t i, calib_mask;
++	calib_mask = 0xffffffff;
++
++	if (total_len < sizeof_len) {
++		for (i = 0; i < sizeof_len - total_len; i++) {
++			calib_mask = calib_mask >> 8;
++		}
++	}
++	return calib_mask;
+ }

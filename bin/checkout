@@ -5,6 +5,6 @@ if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    exit 1
 fi
 
-cd $CROSS_OPENBSD_SRC_HOME
+cd "$CROSS_OPENBSD_SRC_HOME"
 cvs -qd anoncvs@anoncvs.ca.openbsd.org:/cvs checkout -P src
 cd -

@@ -19,13 +19,13 @@ if [ -d "${toolsdir}" ]; then
     rm "${toolsdir}"
 fi
 
-cd ${CROSS_OPENBSD_SRC_HOME}/src
+cd "${CROSS_OPENBSD_SRC_HOME}/src"
 make clean && \
-    make -f Makefile.cross TARGET=${target} CROSSDIR=${destdir} cross-dirs -j${JOBS} && \
-    make -f Makefile.cross TARGET=${target} CROSSDIR=${destdir} cross-tools -j ${JOBS} && \
-    make -f Makefile.cross TARGET=${target} CROSSDIR=${destdir} cross-distrib -j ${JOBS}
+    make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-dirs -j${JOBS} && \
+    make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-tools -j ${JOBS} && \
+    make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-distrib -j ${JOBS}
 cd -
 
-chown -R ${USER}:wobj ${destdir}
-ln -s ${destdir}/usr/obj ${objdir}
-ln -s ${destdir}/usr/${toolstarget}-openbsd$(uname -r) ${toolsdir}
+chown -R ${USER}:wobj "${destdir}"
+ln -s "${destdir}/usr/obj" "${objdir}"
+ln -s "${destdir}/usr/${toolstarget}-openbsd$(uname -r)" "${toolsdir}"

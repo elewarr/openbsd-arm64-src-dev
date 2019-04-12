@@ -5,6 +5,6 @@ if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    exit 1
 fi
 
-cd $CROSS_OPENBSD_SRC_HOME/src
+cd "$CROSS_OPENBSD_SRC_HOME/src"
 cvs -q up -Pd -A
 cd -

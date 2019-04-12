@@ -1,0 +1,13 @@
+--- ./sys/dev/fdt/files.fdt.orig	Fri Apr 12 23:23:30 2019
++++ ./sys/dev/fdt/files.fdt	Fri Apr 12 23:24:57 2019
+@@ -44,6 +44,10 @@ device	sxitwi: i2cbus
+ attach	sxitwi at fdt
+ file	dev/fdt/sxitwi.c		sxitwi
+ 
++device	sxisid
++attach	sxisid at fdt
++file	dev/fdt/sxisid.c		sxisid
++
+ device	axppmic
+ attach	axppmic at i2c
+ attach	axppmic at rsb with axppmic_rsb
