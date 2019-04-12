@@ -1,0 +1,10 @@
+#!/usr/bin/env ksh
+
+if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
+   echo CROSS_OPENBSD_SRC_HOME is missing
+   exit 1
+fi
+
+cd $CROSS_OPENBSD_SRC_HOME
+cvs -qd anoncvs@anoncvs.ca.openbsd.org:/cvs checkout -P src
+cd -

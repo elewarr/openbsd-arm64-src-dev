@@ -1,0 +1,31 @@
+#!/usr/bin/env ksh
+
+if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
+   echo CROSS_OPENBSD_SRC_HOME is missing
+   exit 1
+fi
+
+. "$(dirname $(readlink -f $0))/cross_env"
+
+if [ -d "${destdir}" ]; then
+    rm -rf "${destdir}"
+fi
+
+if [ -d "${objdir}" ]; then
+    rm "${objdir}"
+fi
+
+if [ -d "${toolsdir}" ]; then
+    rm "${toolsdir}"
+fi
+
+cd ${CROSS_OPENBSD_SRC_HOME}/src
+make clean && \
+    make -f Makefile.cross TARGET=${target} CROSSDIR=${destdir} cross-dirs -j${JOBS} && \
+    make -f Makefile.cross TARGET=${target} CROSSDIR=${destdir} cross-tools -j ${JOBS} && \
+    make -f Makefile.cross TARGET=${target} CROSSDIR=${destdir} cross-distrib -j ${JOBS}
+cd -
+
+chown -R ${USER}:wobj ${destdir}
+ln -s ${destdir}/usr/obj ${objdir}
+ln -s ${destdir}/usr/${toolstarget}-openbsd$(uname -r) ${toolsdir}
