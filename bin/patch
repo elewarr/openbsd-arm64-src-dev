@@ -5,8 +5,6 @@ if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    exit 1
 fi
 
-. "$(dirname $(readlink -f $0))/cross_env"
-
 for P in $(find patches/ -type f -name "*.patch" -maxdepth 1 | sort); do
     patch -d "${CROSS_OPENBSD_SRC_HOME}/src" < "$P"
     if [ $? -ne 0 ]; then

@@ -5,7 +5,7 @@ if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    exit 1
 fi
 
-. "$(dirname $(readlink -f $0))/cross_env"
+rm "${CROSS_OPENBSD_SRC_HOME}/patches/"*.patch
 
 cd  "${CROSS_OPENBSD_SRC_HOME}/src"
 for O in $(find . -type f -name "*.orig"); do

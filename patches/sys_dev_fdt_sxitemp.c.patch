@@ -1,5 +1,5 @@
---- ./sys/dev/fdt/sxitemp.c.orig	Fri Apr 12 23:23:30 2019
-+++ ./sys/dev/fdt/sxitemp.c	Fri Apr 12 23:24:57 2019
+--- ./sys/dev/fdt/sxitemp.c.orig	Sun May 27 23:59:26 2018
++++ ./sys/dev/fdt/sxitemp.c	Sat Apr 13 01:33:40 2019
 @@ -19,6 +19,7 @@
  #include <sys/systm.h>
  #include <sys/device.h>

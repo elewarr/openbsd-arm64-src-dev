@@ -1,5 +1,5 @@
---- ./sys/dev/fdt/sxiccmu.c.orig	Fri Apr 12 23:23:30 2019
-+++ ./sys/dev/fdt/sxiccmu.c	Fri Apr 12 23:24:57 2019
+--- ./sys/dev/fdt/sxiccmu.c.orig	Tue Feb 12 22:34:11 2019
++++ ./sys/dev/fdt/sxiccmu.c	Sat Apr 13 01:33:40 2019
 @@ -971,13 +971,57 @@ sxiccmu_a23_get_frequency(struct sxiccmu_softc *sc, ui
  	return 0;
  }

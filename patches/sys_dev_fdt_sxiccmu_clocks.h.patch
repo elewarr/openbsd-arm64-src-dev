@@ -1,5 +1,5 @@
---- ./sys/dev/fdt/sxiccmu_clocks.h.orig	Fri Apr 12 23:23:30 2019
-+++ ./sys/dev/fdt/sxiccmu_clocks.h	Fri Apr 12 23:24:57 2019
+--- ./sys/dev/fdt/sxiccmu_clocks.h.orig	Tue Feb 12 22:34:11 2019
++++ ./sys/dev/fdt/sxiccmu_clocks.h	Sat Apr 13 01:33:40 2019
 @@ -140,9 +140,12 @@ struct sxiccmu_ccu_bit sun8i_a23_gates[] = {
  
  /* A64 */

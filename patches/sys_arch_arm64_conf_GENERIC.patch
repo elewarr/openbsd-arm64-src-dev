@@ -1,5 +1,5 @@
---- ./sys/arch/arm64/conf/GENERIC.orig	Fri Apr 12 23:23:26 2019
-+++ ./sys/arch/arm64/conf/GENERIC	Fri Apr 12 23:24:57 2019
+--- ./sys/arch/arm64/conf/GENERIC.orig	Mon Apr  1 10:46:16 2019
++++ ./sys/arch/arm64/conf/GENERIC	Sat Apr 13 01:33:40 2019
 @@ -172,6 +172,7 @@ axppmic*	at rsb?
  sxirtc*		at fdt?		# Real Time Clock
  sximmc*		at fdt?		# SD/MMC card controller
