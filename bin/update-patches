@@ -8,11 +8,10 @@ fi
 rm "${CROSS_OPENBSD_SRC_HOME}/patches/"*.patch
 
 cd  "${CROSS_OPENBSD_SRC_HOME}/src"
-for O in $(find . -type f -name "*.orig"); do
-    P=${O%.*}
-    diff -uNp $O $P > "${CROSS_OPENBSD_SRC_HOME}/patches/$(echo ${P#??} | sed 's/\//_/g').patch"
+for F in $(cvs -q diff --brief | grep 'Index' | awk -F ' ' '{print $2}'); do
+    cvs diff $F > "${CROSS_OPENBSD_SRC_HOME}/patches/$(echo ${F} | sed 's/\//_/g').patch"
     if [ $? -gt 1 ]; then
-        echo diff for $P failed
+        echo diff for $F failed
         exit 1
     fi
 done

@@ -5,7 +5,7 @@ if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    exit 1
 fi
 
-for P in $(find patches/ -type f -name "*.patch" -maxdepth 1 | sort); do
+for P in $(find "${CROSS_OPENBSD_SRC_HOME}/patches/" -type f -name "*.patch" -maxdepth 1 | sort); do
     patch -d "${CROSS_OPENBSD_SRC_HOME}/src" < "$P"
     if [ $? -ne 0 ]; then
         echo $P failed

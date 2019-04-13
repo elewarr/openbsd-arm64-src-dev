@@ -1,0 +1,19 @@
+#!/usr/bin/env ksh
+
+if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
+   echo CROSS_OPENBSD_SRC_HOME is missing
+   exit 1
+fi
+
+cd "$CROSS_OPENBSD_SRC_HOME/src"
+cvs -q up -Pd -A -C
+for O in $(find . -type f -name "*.orig"); do
+    echo removing ${O}
+    rm ${O}
+done
+for R in $(find . -type f -name "*.rej"); do
+    echo removing ${R}
+    rm ${R}
+done
+
+cd -

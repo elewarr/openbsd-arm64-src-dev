@@ -1,5 +1,10 @@
---- ./sys/dev/fdt/sxitemp.c.orig	Sun May 27 23:59:26 2018
-+++ ./sys/dev/fdt/sxitemp.c	Sat Apr 13 01:33:40 2019
+Index: sys/dev/fdt/sxitemp.c
+===================================================================
+RCS file: /cvs/src/sys/dev/fdt/sxitemp.c,v
+retrieving revision 1.4
+diff -u -p -r1.4 sxitemp.c
+--- sys/dev/fdt/sxitemp.c	27 May 2018 21:59:26 -0000	1.4
++++ sys/dev/fdt/sxitemp.c	13 Apr 2019 00:53:02 -0000
 @@ -19,6 +19,7 @@
  #include <sys/systm.h>
  #include <sys/device.h>
@@ -16,7 +21,7 @@
  
  #define HREAD4(sc, reg)							\
  	(bus_space_read_4((sc)->sc_iot, (sc)->sc_ioh, (reg)))
-@@ -81,8 +83,14 @@ uint64_t sxitemp_r40_calc_temp(int64_t);
+@@ -81,7 +83,13 @@ uint64_t sxitemp_r40_calc_temp(int64_t);
  uint64_t sxitemp_a64_calc_temp(int64_t);
  uint64_t sxitemp_h5_calc_temp0(int64_t);
  uint64_t sxitemp_h5_calc_temp1(int64_t);
@@ -26,13 +31,12 @@
 +	struct fdt_attach_args *);
 +void sxitemp_tx(struct sxitemp_softc *, uint32_t, uint32_t, uint32_t *);
 +uint32_t sxitemp_calib_mask(uint32_t, uint32_t);
- 
-+extern uint32_t sxisid_read(bus_size_t, uint32_t, uint8_t *);
 +
++extern uint32_t sxisid_read(bus_size_t, uint32_t, uint8_t *);
+ 
  int
  sxitemp_match(struct device *parent, void *match, void *aux)
- {
-@@ -140,6 +148,8 @@ sxitemp_attach(struct device *parent, struct device *s
+@@ -140,6 +148,8 @@ sxitemp_attach(struct device *parent, st
  		enable = THS_CTRL2_SENSE0_EN | THS_CTRL2_SENSE1_EN;
  	}
  

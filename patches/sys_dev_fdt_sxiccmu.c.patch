@@ -1,6 +1,11 @@
---- ./sys/dev/fdt/sxiccmu.c.orig	Tue Feb 12 22:34:11 2019
-+++ ./sys/dev/fdt/sxiccmu.c	Sat Apr 13 01:33:40 2019
-@@ -971,13 +971,57 @@ sxiccmu_a23_get_frequency(struct sxiccmu_softc *sc, ui
+Index: sys/dev/fdt/sxiccmu.c
+===================================================================
+RCS file: /cvs/src/sys/dev/fdt/sxiccmu.c,v
+retrieving revision 1.22
+diff -u -p -r1.22 sxiccmu.c
+--- sys/dev/fdt/sxiccmu.c	12 Feb 2019 21:34:11 -0000	1.22
++++ sys/dev/fdt/sxiccmu.c	13 Apr 2019 00:52:54 -0000
+@@ -971,13 +971,57 @@ sxiccmu_a23_get_frequency(struct sxiccmu
  	return 0;
  }
  
@@ -58,7 +63,7 @@
  	case A64_CLK_LOSC:
  		return clock_get_frequency(sc->sc_node, "losc");
  	case A64_CLK_HOSC:
-@@ -1369,8 +1413,48 @@ sxiccmu_a64_set_frequency(struct sxiccmu_softc *sc, ui
+@@ -1369,8 +1413,48 @@ sxiccmu_a64_set_frequency(struct sxiccmu
  {
  	struct sxiccmu_clock clock;
  	uint32_t parent, parent_freq;
