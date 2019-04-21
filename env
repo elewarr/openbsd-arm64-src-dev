@@ -1,3 +1,4 @@
 #!/usr/bin/env ksh
 export CROSS_OPENBSD_SRC_HOME="$(pwd)"
 export JOBS="$(sysctl -n hw.ncpuonline)"
+export TARGET="192.168.1.127"
