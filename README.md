@@ -54,7 +54,7 @@ It's only required for `./bin/build_cross_tools`.
 1. `./bin/build_kernel`
 
 ### Deploy
-*Review and edit `./env` before use.**
+*Review and edit `./env` before use.*
 1. `./bin/deploy`
 
 #### Generate new patches - one per file (*will overwrite existing ones*)
