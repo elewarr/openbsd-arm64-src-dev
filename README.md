@@ -27,11 +27,7 @@ With u-boot from this repository: https://github.com/elewarr/openbsd-ports-u-boo
 1. `patches/` - A64 patches
 
 #### Prerequisites
-To make things work:
 1. build the port from https://github.com/elewarr/openbsd-ports-u-boot 
-`FLAVOR=aarch64 doas make install`
-1. _flash_ SD card on the board: `dd if=/usr/local/share/u-boot/pine64_plus/u-boot-sunxi-with-sp.bin of=/dev/sd0c bs=1024 seek=8` (*adjust to your needs if necessary*)
-1. the port is in sync with _-current_ `ports/sysutils/u-boot`
 1. There is a problem with cross-tools compilation on LLVM 8: https://bugs.llvm.org/show_bug.cgi?id=42478
 For now add following entries to `/etc/mk.conf`:
 ```
