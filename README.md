@@ -18,6 +18,7 @@ With u-boot from this repository: https://github.com/elewarr/openbsd-ports-u-boo
 1. `bin/` - scripts
 1. `build_cross_tools` - build toolset necessary to crosscompile kernel
 1. `build_kernel` - build `GENERIC.MP`
+1. `deploy` - copy new kernel over ssh and install it, also write u-boot SPL
 1. `checkout` - repo from cvs
 1. `cross_env` - environment used by `build_kernel`
 1. `patch` - apply all `*.patches` from `patches/`
@@ -31,6 +32,13 @@ To make things work:
 `FLAVOR=aarch64 doas make install`
 1. _flash_ SD card on the board: `dd if=/usr/local/share/u-boot/pine64_plus/u-boot-sunxi-with-sp.bin of=/dev/sd0c bs=1024 seek=8` (*adjust to your needs if necessary*)
 1. the port is in sync with _-current_ `ports/sysutils/u-boot`
+1. There is a problem with cross-tools compilation on LLVM 8: https://bugs.llvm.org/show_bug.cgi?id=42478
+For now add following entries to `/etc/mk.conf`:
+```
+CXXFLAGS+=-O2
+CPPFLAGS+=-O2
+```
+It's only required for `./bin/build_cross_tools`.
 
 #### Setup
 1. `git clone git@github.com:elewarr/openbsd-arm64-src-dev.git`
@@ -44,6 +52,10 @@ To make things work:
 
 #### Build kernel
 1. `./bin/build_kernel`
+
+### Deploy
+*Review and edit `./env` before use.**
+1. `./bin/deploy`
 
 #### Generate new patches - one per file (*will overwrite existing ones*)
 1. `./bin/make-patches`
