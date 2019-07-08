@@ -29,6 +29,7 @@ With u-boot from this repository: https://github.com/elewarr/openbsd-ports-u-boo
 #### Prerequisites
 1. build the port from https://github.com/elewarr/openbsd-ports-u-boot 
 1. There is a problem with cross-tools compilation on LLVM 8: https://bugs.llvm.org/show_bug.cgi?id=42478
+
 For now add following entries to `/etc/mk.conf`:
 ```
 CXXFLAGS+=-O2
