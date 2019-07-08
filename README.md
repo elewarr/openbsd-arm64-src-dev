@@ -50,7 +50,7 @@ It's only required for `./bin/build_cross_tools`.
 #### Build kernel
 1. `./bin/build_kernel`
 
-### Deploy
+#### Deploy
 *Review and edit `./env` before use.*
 1. `./bin/deploy`
 
