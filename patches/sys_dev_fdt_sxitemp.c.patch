@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/dev/fdt/sxitemp.c,v
 retrieving revision 1.4
 diff -u -p -r1.4 sxitemp.c
 --- sys/dev/fdt/sxitemp.c	27 May 2018 21:59:26 -0000	1.4
-+++ sys/dev/fdt/sxitemp.c	13 Apr 2019 00:53:02 -0000
++++ sys/dev/fdt/sxitemp.c	8 Jul 2019 12:32:53 -0000
 @@ -19,6 +19,7 @@
  #include <sys/systm.h>
  #include <sys/device.h>
@@ -45,7 +45,7 @@ diff -u -p -r1.4 sxitemp.c
  	/* Start data acquisition. */
  	HWRITE4(sc, THS_FILTER, THS_FILTER_EN | THS_FILTER_TYPE(1));
  	HWRITE4(sc, THS_INT_CTRL, THS_INT_CTRL_THERMAL_PER(800));
-@@ -236,4 +246,70 @@ sxitemp_refresh_sensors(void *arg)
+@@ -236,4 +246,74 @@ sxitemp_refresh_sensors(void *arg)
  		sc->sc_sensors[2].value = sc->sc_calc_temp2(data) + 273150000;
  		sc->sc_sensors[2].flags &= ~SENSOR_FINVALID;
  	}
@@ -61,19 +61,22 @@ diff -u -p -r1.4 sxitemp.c
 +	if (phandle == 0) {
 +		return;
 +	}
++
 +	node = OF_getnodebyphandle(phandle);
 +	if (node == 0) {
 +		return;
 +	}
++
 +	len = OF_getproplen(node, "reg");
 +	if (len == 0) {
 +		return;
 +	}
-+	reg = malloc(len, M_TEMP, M_NOWAIT);
 +
++	reg = malloc(len, M_TEMP, M_NOWAIT);
 +	if (reg == NULL) {
 +		return;
 +	}
++
 +	if (OF_getpropintarray(node, "reg", reg, len) != len) {
 +		free(reg, M_TEMP, len);
 +		return;
@@ -84,6 +87,7 @@ diff -u -p -r1.4 sxitemp.c
 +	if (calib != NULL) {
 +		sxitemp_tx(sc, reg[0], reg[1], calib);
 +	}
++
 +	free(calib, M_TEMP, calib_len);
 +	free(reg, M_TEMP, len);
 +}

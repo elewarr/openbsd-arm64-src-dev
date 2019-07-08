@@ -4,8 +4,8 @@ RCS file: /cvs/src/sys/dev/fdt/sxiccmu.c,v
 retrieving revision 1.22
 diff -u -p -r1.22 sxiccmu.c
 --- sys/dev/fdt/sxiccmu.c	12 Feb 2019 21:34:11 -0000	1.22
-+++ sys/dev/fdt/sxiccmu.c	13 Apr 2019 00:52:54 -0000
-@@ -971,13 +971,57 @@ sxiccmu_a23_get_frequency(struct sxiccmu
++++ sys/dev/fdt/sxiccmu.c	8 Jul 2019 12:32:45 -0000
+@@ -971,13 +971,55 @@ sxiccmu_a23_get_frequency(struct sxiccmu
  	return 0;
  }
  
@@ -21,8 +21,6 @@ diff -u -p -r1.22 sxiccmu.c
 +#define A64_PLL_CPUX_FACTOR_K_SHIFT	4
 +#define A64_PLL_CPUX_FACTOR_M(x)		(((x) >> 0) & 0x3)
 +#define A64_PLL_CPUX_FACTOR_M_MASK	(0x3 << 0)
-+#define H3_PLL_CPUX_FACTOR_M_SHIFT	0
-+#define A64_PLL_CPUX_CTRL_REG		0x0000
 +#define A64_CPUX_AXI_CFG_REG		0x0050
 +#define A64_CPUX_CLK_SRC_SEL		(0x3 << 16)
 +#define A64_CPUX_CLK_SRC_SEL_LOSC	(0x0 << 16)
@@ -63,7 +61,7 @@ diff -u -p -r1.22 sxiccmu.c
  	case A64_CLK_LOSC:
  		return clock_get_frequency(sc->sc_node, "losc");
  	case A64_CLK_HOSC:
-@@ -1369,8 +1413,48 @@ sxiccmu_a64_set_frequency(struct sxiccmu
+@@ -1369,8 +1411,51 @@ sxiccmu_a64_set_frequency(struct sxiccmu
  {
  	struct sxiccmu_clock clock;
  	uint32_t parent, parent_freq;
@@ -90,8 +88,11 @@ diff -u -p -r1.22 sxiccmu.c
 +
 +		/* Wait for PLL to lock. */
 +		while ((SXIREAD4(sc, A64_PLL_CPUX_CTRL_REG) &
-+		    A64_PLL_CPUX_LOCK) == 0)
++            A64_PLL_CPUX_LOCK) == 0) {
++      printf(".....");
 +			delay(1);
++    }
++    printf("\n");
 +
 +		return 0;
 +	case A64_CLK_CPUX:
