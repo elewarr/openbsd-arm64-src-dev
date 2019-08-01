@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/arch/arm64/conf/GENERIC,v
 retrieving revision 1.104
 diff -u -p -r1.104 GENERIC
 --- sys/arch/arm64/conf/GENERIC	7 Jun 2019 04:03:04 -0000	1.104
-+++ sys/arch/arm64/conf/GENERIC	8 Jul 2019 12:32:39 -0000
++++ sys/arch/arm64/conf/GENERIC	1 Aug 2019 07:57:06 -0000
 @@ -176,6 +176,7 @@ axppmic*	at rsb?
  sxirtc*		at fdt?		# Real Time Clock
  sximmc*		at fdt?		# SD/MMC card controller

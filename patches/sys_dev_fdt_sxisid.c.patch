@@ -3,7 +3,7 @@ Index: sys/dev/fdt/sxisid.c
 RCS file: sys/dev/fdt/sxisid.c
 diff -N sys/dev/fdt/sxisid.c
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ sys/dev/fdt/sxisid.c	8 Jul 2019 12:32:50 -0000
++++ sys/dev/fdt/sxisid.c	1 Aug 2019 07:57:22 -0000
 @@ -0,0 +1,165 @@
 +/*	$OpenBSD$	*/
 +/*
