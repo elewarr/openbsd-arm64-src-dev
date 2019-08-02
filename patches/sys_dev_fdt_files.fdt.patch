@@ -4,14 +4,18 @@ RCS file: /cvs/src/sys/dev/fdt/files.fdt,v
 retrieving revision 1.80
 diff -u -p -r1.80 files.fdt
 --- sys/dev/fdt/files.fdt	11 May 2019 14:43:27 -0000	1.80
-+++ sys/dev/fdt/files.fdt	1 Aug 2019 07:57:11 -0000
-@@ -44,6 +44,10 @@ device	sxitwi: i2cbus
++++ sys/dev/fdt/files.fdt	2 Aug 2019 17:37:28 -0000
+@@ -44,6 +44,14 @@ device	sxitwi: i2cbus
  attach	sxitwi at fdt
  file	dev/fdt/sxitwi.c		sxitwi
  
 +device	sxisid
 +attach	sxisid at fdt
 +file	dev/fdt/sxisid.c		sxisid
++
++device	sxiuphy
++attach	sxiuphy at fdt
++file	dev/fdt/sxiuphy.c		sxiuphy
 +
  device	axppmic
  attach	axppmic at i2c

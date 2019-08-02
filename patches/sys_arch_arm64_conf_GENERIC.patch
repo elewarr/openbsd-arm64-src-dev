@@ -4,12 +4,16 @@ RCS file: /cvs/src/sys/arch/arm64/conf/GENERIC,v
 retrieving revision 1.104
 diff -u -p -r1.104 GENERIC
 --- sys/arch/arm64/conf/GENERIC	7 Jun 2019 04:03:04 -0000	1.104
-+++ sys/arch/arm64/conf/GENERIC	1 Aug 2019 07:57:06 -0000
-@@ -176,6 +176,7 @@ axppmic*	at rsb?
++++ sys/arch/arm64/conf/GENERIC	2 Aug 2019 17:37:19 -0000
+@@ -176,9 +176,11 @@ axppmic*	at rsb?
  sxirtc*		at fdt?		# Real Time Clock
  sximmc*		at fdt?		# SD/MMC card controller
  sdmmc*		at sximmc?	# SD/MMC bus
-+sxisid*		at fdt? early 1	# SID ROM  
++sxisid*		at fdt? early 1	# SID ROM
  sxitemp*	at fdt?		# Temperature sensor
  sxitwi*		at fdt?		# I2C controller
  iic*		at sxitwi?	# I2C bus
++sxiuphy*	at fdt?		# USB Phy
+ dwxe*		at fdt?
+ 
+ # PCI

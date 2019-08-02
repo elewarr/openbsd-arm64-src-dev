@@ -4,18 +4,58 @@ RCS file: /cvs/src/sys/dev/fdt/axppmic.c,v
 retrieving revision 1.6
 diff -u -p -r1.6 axppmic.c
 --- sys/dev/fdt/axppmic.c	10 Feb 2018 22:32:01 -0000	1.6
-+++ sys/dev/fdt/axppmic.c	1 Aug 2019 07:57:08 -0000
-@@ -256,6 +256,9 @@ struct axppmic_sensdata axp221_sensdata[
++++ sys/dev/fdt/axppmic.c	2 Aug 2019 17:37:25 -0000
+@@ -36,6 +36,13 @@ extern void (*powerdownfn)(void);
+ #define  AXP209_ADC_EN1_ACIN	(3 << 4)
+ #define  AXP209_ADC_EN1_VBUS	(3 << 2)
+ 
++#define AXP803_BAT_CAP_WARN		0xe6
++#define  AXP803_BAT_CAP_WARN_LV1	0xf0
++#define  AXP803_BAT_CAP_WARN_LV1BASE	5
++#define  AXP803_BAT_CAP_WARN_LV2	0x0f
++
++#define AXP803_BAT_CAP	0xb9
++
+ #define AXP806_REG_ADDR_EXT			0xff
+ #define  AXP806_REG_ADDR_EXT_MASTER_MODE	(0 << 4)
+ #define  AXP806_REG_ADDR_EXT_SLAVE_MODE		(1 << 4)
+@@ -256,6 +263,9 @@ struct axppmic_sensdata axp221_sensdata[
  struct axppmic_sensdata axp803_sensdata[] = {
  	{ "ACIN", SENSOR_INDICATOR, 0x00, (1 << 7), (1 << 6) },
  	{ "VBUS", SENSOR_INDICATOR, 0x00, (1 << 5), (1 << 4) },
 +	{ "battery present", SENSOR_INDICATOR, 0x01, (1 << 5), (1 << 4) },
 +	{ "battery charging", SENSOR_INDICATOR, 0x01, (1 << 6), (1 << 6) },
-+	{ "battery percent", SENSOR_PERCENT, 0xb9, ( 0x7f ), (1 << 7) },
++	{ "battery percent", SENSOR_PERCENT, AXP803_BAT_CAP, ( 0x7f ), (1 << 7) },
  	{ "", SENSOR_TEMP, 0x56, 5450000, 106250 },
  	{ NULL }
  };
-@@ -629,6 +632,7 @@ axppmic_enable(void *cookie, int on)
+@@ -302,6 +312,8 @@ struct axppmic_softc {
+ 
+ 	struct ksensor	sc_sensor[AXPPMIC_NSENSORS];
+ 	struct ksensordev sc_sensordev;
++
++	uint8_t warn_thres, shut_thres;
+ };
+ 
+ inline uint8_t
+@@ -487,6 +499,16 @@ axppmic_attach_common(struct axppmic_sof
+ 		axppmic_write_reg(sc, AXP209_ADC_EN1, reg);
+ 	}
+ 
++	/* Read battery warning level */
++	if(strcmp(name, "x-powers,axp803") == 0) {
++		uint8_t value;
++
++		value = axppmic_read_reg(sc, AXP803_BAT_CAP_WARN);
++		sc->warn_thres = ((value & AXP803_BAT_CAP_WARN_LV1) >> 4);
++		sc->warn_thres += AXP803_BAT_CAP_WARN_LV1BASE;
++		sc->shut_thres = (value & AXP803_BAT_CAP_WARN_LV2);
++	}
++
+ 	if (sc->sc_regdata)
+ 		axppmic_attach_regulators(sc, node);
+ 
+@@ -629,6 +651,7 @@ axppmic_enable(void *cookie, int on)
  
  void	axppmic_update_sensors(void *);
  void	axppmic_update_indicator(struct axppmic_softc *, int);
@@ -23,22 +63,19 @@ diff -u -p -r1.6 axppmic.c
  void	axppmic_update_sensor(struct axppmic_softc *, int);
  
  void
-@@ -665,6 +669,8 @@ axppmic_update_sensors(void *arg)
+@@ -665,6 +688,8 @@ axppmic_update_sensors(void *arg)
  	for (i = 0; sc->sc_sensdata[i].name; i++) {
  		if (sc->sc_sensdata[i].type == SENSOR_INDICATOR)
  			axppmic_update_indicator(sc, i);
 +		else if(sc->sc_sensdata[i].type == SENSOR_PERCENT)
-+      axppmic_update_percent(sc, i);
++			axppmic_update_percent(sc, i);
  		else
  			axppmic_update_sensor(sc, i);
  	}
-@@ -680,6 +686,24 @@ axppmic_update_indicator(struct axppmic_
- 
- 	value = axppmic_read_reg(sc, reg);
- 	sc->sc_sensor[i].value = (value & mask) ? 1 : 0;
-+	if (value & mask) {
-+		sc->sc_sensor[i].status =
-+		    (value & mask_ok) ? SENSOR_S_OK : SENSOR_S_WARN;
+@@ -683,6 +708,34 @@ axppmic_update_indicator(struct axppmic_
+ 	if (value & mask) {
+ 		sc->sc_sensor[i].status =
+ 		    (value & mask_ok) ? SENSOR_S_OK : SENSOR_S_WARN;
 +	} else {
 +		sc->sc_sensor[i].status = SENSOR_S_UNSPEC;
 +	}
@@ -51,9 +88,22 @@ diff -u -p -r1.6 axppmic.c
 +	uint8_t mask = sc->sc_sensdata[i].base;
 +	uint8_t mask_ok = sc->sc_sensdata[i].delta;
 +	uint8_t value;
++	enum sensor_status status = SENSOR_S_OK;
 +
 +	value = axppmic_read_reg(sc, reg);
 +	sc->sc_sensor[i].value = (value & mask) * 1000;
- 	if (value & mask) {
- 		sc->sc_sensor[i].status =
- 		    (value & mask_ok) ? SENSOR_S_OK : SENSOR_S_WARN;
++
++	if (reg == AXP803_BAT_CAP) {
++		if (value <= sc->shut_thres) {
++			status = SENSOR_S_CRIT;
++		} else if (value <= sc->warn_thres) {
++			status = SENSOR_S_WARN;
++		}
++	}
++
++	if (value & mask) {
++		sc->sc_sensor[i].status =
++		    (value & mask_ok) ? status : SENSOR_S_WARN;
+ 	} else {
+ 		sc->sc_sensor[i].status = SENSOR_S_UNSPEC;
+ 	}
