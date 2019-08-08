@@ -4,8 +4,8 @@ RCS file: /cvs/src/sys/dev/fdt/axppmic.c,v
 retrieving revision 1.6
 diff -u -p -r1.6 axppmic.c
 --- sys/dev/fdt/axppmic.c	10 Feb 2018 22:32:01 -0000	1.6
-+++ sys/dev/fdt/axppmic.c	2 Aug 2019 17:37:25 -0000
-@@ -36,6 +36,13 @@ extern void (*powerdownfn)(void);
++++ sys/dev/fdt/axppmic.c	8 Aug 2019 13:46:17 -0000
+@@ -36,6 +36,15 @@ extern void (*powerdownfn)(void);
  #define  AXP209_ADC_EN1_ACIN	(3 << 4)
  #define  AXP209_ADC_EN1_VBUS	(3 << 2)
  
@@ -13,23 +13,39 @@ diff -u -p -r1.6 axppmic.c
 +#define  AXP803_BAT_CAP_WARN_LV1	0xf0
 +#define  AXP803_BAT_CAP_WARN_LV1BASE	5
 +#define  AXP803_BAT_CAP_WARN_LV2	0x0f
-+
-+#define AXP803_BAT_CAP	0xb9
++#define AXP803_BAT_MAX_CAP		0xe0
++#define AXP803_BAT_CUR_CAP		0xe2
++#define  AXP803_BAT_CAP_VALID		(1 << 7)
++#define AXP803_BAT_CAP			0xb9
 +
  #define AXP806_REG_ADDR_EXT			0xff
  #define  AXP806_REG_ADDR_EXT_MASTER_MODE	(0 << 4)
  #define  AXP806_REG_ADDR_EXT_SLAVE_MODE		(1 << 4)
-@@ -256,6 +263,9 @@ struct axppmic_sensdata axp221_sensdata[
+@@ -225,7 +234,7 @@ struct axppmic_regdata axp809_regdata[] 
+ 
+ /* Sensors for AXP209 and AXP221/AXP809. */
+ 
+-#define AXPPMIC_NSENSORS 8
++#define AXPPMIC_NSENSORS 12
+ 
+ struct axppmic_sensdata {
+ 	const char *name;
+@@ -256,6 +265,14 @@ struct axppmic_sensdata axp221_sensdata[
  struct axppmic_sensdata axp803_sensdata[] = {
  	{ "ACIN", SENSOR_INDICATOR, 0x00, (1 << 7), (1 << 6) },
  	{ "VBUS", SENSOR_INDICATOR, 0x00, (1 << 5), (1 << 4) },
 +	{ "battery present", SENSOR_INDICATOR, 0x01, (1 << 5), (1 << 4) },
 +	{ "battery charging", SENSOR_INDICATOR, 0x01, (1 << 6), (1 << 6) },
 +	{ "battery percent", SENSOR_PERCENT, AXP803_BAT_CAP, ( 0x7f ), (1 << 7) },
++	{ "battery voltage", SENSOR_VOLTS_DC, 0x78, 0x00, 1100 },
++	{ "battery charging current", SENSOR_AMPS, 0x7a, 0x00, 1000 },
++	{ "battery discharging current", SENSOR_AMPS, 0x7c, 0x00, 1000 },
++	{ "battery maximum capacity", SENSOR_AMPHOUR, AXP803_BAT_MAX_CAP, 0x00, 1456 },
++	{ "battery current capacity", SENSOR_AMPHOUR, AXP803_BAT_CUR_CAP, 0x00, 1456 },
  	{ "", SENSOR_TEMP, 0x56, 5450000, 106250 },
  	{ NULL }
  };
-@@ -302,6 +312,8 @@ struct axppmic_softc {
+@@ -302,6 +319,8 @@ struct axppmic_softc {
  
  	struct ksensor	sc_sensor[AXPPMIC_NSENSORS];
  	struct ksensordev sc_sensordev;
@@ -38,7 +54,7 @@ diff -u -p -r1.6 axppmic.c
  };
  
  inline uint8_t
-@@ -487,6 +499,16 @@ axppmic_attach_common(struct axppmic_sof
+@@ -487,6 +506,16 @@ axppmic_attach_common(struct axppmic_sof
  		axppmic_write_reg(sc, AXP209_ADC_EN1, reg);
  	}
  
@@ -55,7 +71,7 @@ diff -u -p -r1.6 axppmic.c
  	if (sc->sc_regdata)
  		axppmic_attach_regulators(sc, node);
  
-@@ -629,6 +651,7 @@ axppmic_enable(void *cookie, int on)
+@@ -629,6 +658,7 @@ axppmic_enable(void *cookie, int on)
  
  void	axppmic_update_sensors(void *);
  void	axppmic_update_indicator(struct axppmic_softc *, int);
@@ -63,7 +79,7 @@ diff -u -p -r1.6 axppmic.c
  void	axppmic_update_sensor(struct axppmic_softc *, int);
  
  void
-@@ -665,6 +688,8 @@ axppmic_update_sensors(void *arg)
+@@ -665,6 +695,8 @@ axppmic_update_sensors(void *arg)
  	for (i = 0; sc->sc_sensdata[i].name; i++) {
  		if (sc->sc_sensdata[i].type == SENSOR_INDICATOR)
  			axppmic_update_indicator(sc, i);
@@ -72,16 +88,10 @@ diff -u -p -r1.6 axppmic.c
  		else
  			axppmic_update_sensor(sc, i);
  	}
-@@ -683,6 +708,34 @@ axppmic_update_indicator(struct axppmic_
- 	if (value & mask) {
- 		sc->sc_sensor[i].status =
- 		    (value & mask_ok) ? SENSOR_S_OK : SENSOR_S_WARN;
-+	} else {
-+		sc->sc_sensor[i].status = SENSOR_S_UNSPEC;
-+	}
-+}
-+
-+void
+@@ -689,6 +721,34 @@ axppmic_update_indicator(struct axppmic_
+ }
+ 
+ void
 +axppmic_update_percent(struct axppmic_softc *sc, int i)
 +{
 +	uint8_t reg = sc->sc_sensdata[i].reg;
@@ -104,6 +114,26 @@ diff -u -p -r1.6 axppmic.c
 +	if (value & mask) {
 +		sc->sc_sensor[i].status =
 +		    (value & mask_ok) ? status : SENSOR_S_WARN;
- 	} else {
- 		sc->sc_sensor[i].status = SENSOR_S_UNSPEC;
- 	}
++	} else {
++		sc->sc_sensor[i].status = SENSOR_S_UNSPEC;
++	}
++}
++
++void
+ axppmic_update_sensor(struct axppmic_softc *sc, int i)
+ {
+ 	uint8_t reg = sc->sc_sensdata[i].reg;
+@@ -697,7 +757,12 @@ axppmic_update_sensor(struct axppmic_sof
+ 	uint16_t value;
+ 
+ 	value = axppmic_read_reg(sc, reg);
+-	value = (value << 4) | axppmic_read_reg(sc, reg + 1);
++	if (reg == AXP803_BAT_MAX_CAP || reg == AXP803_BAT_CUR_CAP) {
++		sc->sc_sensor[i].status = (value & (AXP803_BAT_CAP_VALID)) ? SENSOR_S_OK : SENSOR_S_WARN;
++		value = (((value & ~(AXP803_BAT_CAP_VALID)) << 8) | axppmic_read_reg(sc, reg + 1));
++	} else {
++		value = (value << 4) | axppmic_read_reg(sc, reg + 1);
++	}
+ 	sc->sc_sensor[i].value = base + value * delta;
+ }
+ 

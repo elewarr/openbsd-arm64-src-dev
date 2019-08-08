@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/dev/fdt/sxiccmu.c,v
 retrieving revision 1.22
 diff -u -p -r1.22 sxiccmu.c
 --- sys/dev/fdt/sxiccmu.c	12 Feb 2019 21:34:11 -0000	1.22
-+++ sys/dev/fdt/sxiccmu.c	2 Aug 2019 17:37:33 -0000
++++ sys/dev/fdt/sxiccmu.c	8 Aug 2019 13:46:26 -0000
 @@ -971,13 +971,55 @@ sxiccmu_a23_get_frequency(struct sxiccmu
  	return 0;
  }
