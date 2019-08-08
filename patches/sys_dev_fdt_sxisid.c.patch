@@ -3,8 +3,8 @@ Index: sys/dev/fdt/sxisid.c
 RCS file: sys/dev/fdt/sxisid.c
 diff -N sys/dev/fdt/sxisid.c
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ sys/dev/fdt/sxisid.c	8 Aug 2019 13:46:35 -0000
-@@ -0,0 +1,165 @@
++++ sys/dev/fdt/sxisid.c	8 Aug 2019 22:36:30 -0000
+@@ -0,0 +1,144 @@
 +/*	$OpenBSD$	*/
 +/*
 + * Copyright (c) 2019 Krystian Lewandowski
@@ -34,12 +34,13 @@ diff -N sys/dev/fdt/sxisid.c
 +#include <dev/ofw/openfirm.h>
 +#include <dev/ofw/fdt.h>
 +
-+#define EFUSE_OFFSET	0x0200
++#define EFUSE_OFFSET	0x200
 +#define SID_PRCTL_OFFSET(n)	(((n) & 0xff) << 16)
 +#define SID_PRCTL_OP_LOCK	(0xac << 8)
 +#define SID_PRCTL_READ	(0x01 << 1)
 +#define SID_PRCTL	0x40
 +#define SID_RDKEY	0x60
++#define SID_LEN	0x10
 +
 +#define HREAD4(sc, reg)					\
 +		(bus_space_read_4((sc)->sc_iot, (sc)->sc_ioh,(reg)))
@@ -48,15 +49,15 @@ diff -N sys/dev/fdt/sxisid.c
 +		(bus_space_write_4((sc)->sc_iot, (sc)->sc_ioh, (reg), (val)))
 +
 +struct sxisid_softc {
-+	struct device 	sc_dev;
++	struct device sc_dev;
 +	bus_space_tag_t sc_iot;
 +	bus_space_handle_t sc_ioh;
-+	struct mutex 	sc_mtx;
++	struct mutex sc_mtx;
 +};
 +
-+int 		sxisid_match(struct device *, void *, void *);
-+void 		sxisid_attach(struct device *, struct device *, void *);
-+uint32_t 	sxisid_read(bus_size_t, uint32_t, uint8_t *);
++int sxisid_match(struct device *, void *, void *);
++void sxisid_attach(struct device *, struct device *, void *);
++uint32_t sxisid_read(bus_size_t, uint32_t, uint8_t *);
 +
 +struct cfattach sxisid_ca = {
 +	sizeof(struct sxisid_softc), sxisid_match, sxisid_attach
@@ -83,8 +84,7 @@ diff -N sys/dev/fdt/sxisid.c
 +	struct sxisid_softc *sc = (struct sxisid_softc *) self;
 +	struct fdt_attach_args *faa = aux;
 +	uint8_t *sid, hw_uuid_len;
-+	uint32_t i, *chipid_reg;
-+	int chipid_node, chipid_len;
++	uint32_t i;
 +
 +	if (faa->fa_nreg < 1) {
 +		printf(": no registers\n");
@@ -101,39 +101,18 @@ diff -N sys/dev/fdt/sxisid.c
 +	mtx_init(&sc->sc_mtx, IPL_NONE);
 +	sxisid_sc = sc;
 +
-+	chipid_node = OF_getnodebyname(faa->fa_node, "chip-id@200");
-+	if (chipid_node == 0) {
-+		return;
-+	}
-+
-+	chipid_len = OF_getproplen(chipid_node, "reg");
-+	if (chipid_len == 0) {
-+		return;
-+	}
-+
-+	chipid_reg = malloc(chipid_len, M_TEMP, M_NOWAIT);
-+	if (chipid_reg == NULL) {
-+		return;
-+	}
-+	if (OF_getpropintarray(chipid_node, "reg", chipid_reg, chipid_len) !=
-+	    chipid_len) {
-+		free(chipid_reg, M_TEMP, chipid_len);
-+		return;
-+	}
-+
-+	hw_uuid_len = chipid_reg[1] * 2 + 1;
++	hw_uuid_len = SID_LEN * 2 + 1;
 +	hw_uuid = malloc(hw_uuid_len, M_DEVBUF, M_NOWAIT);
-+	sid = malloc(chipid_reg[1], M_TEMP, M_NOWAIT);
++	sid = malloc(SID_LEN, M_TEMP, M_NOWAIT);
 +	if (hw_uuid != NULL && sid != NULL &&
-+	    sxisid_read(chipid_reg[0], chipid_reg[1], sid) == chipid_reg[1]) {
-+		for (i = 0; i < chipid_reg[1]; i++) {
++	    sxisid_read(EFUSE_OFFSET, SID_LEN, sid) == SID_LEN) {
++		for (i = 0; i < SID_LEN; i++) {
 +			snprintf(hw_uuid + (i * 2),
 +			    hw_uuid_len - (i * 2),
 +			    "%.2x", sid[i]);
 +		}
 +	}
-+	free(sid, M_TEMP, chipid_reg[1]);
-+	free(chipid_reg, M_TEMP, chipid_len);
++	free(sid, M_TEMP, SID_LEN);
 +}
 +
 +uint32_t
@@ -148,6 +127,7 @@ diff -N sys/dev/fdt/sxisid.c
 +
 +	mtx_enter(&sc->sc_mtx);
 +	for (i = 0; i < size; i += 4) {
++
 +		val = SID_PRCTL_OFFSET(offset - EFUSE_OFFSET + i) |
 +		    SID_PRCTL_OP_LOCK | SID_PRCTL_READ;
 +		HWRITE4(sc, SID_PRCTL, val);
@@ -157,7 +137,6 @@ diff -N sys/dev/fdt/sxisid.c
 +		}
 +
 +		val = HREAD4(sc, SID_RDKEY);
-+
 +		for (j = i; j < size; j++) {
 +			if (j - i == sizeof(val)) {
 +				break;
