@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/dev/fdt/axppmic.c,v
 retrieving revision 1.6
 diff -u -p -r1.6 axppmic.c
 --- sys/dev/fdt/axppmic.c	10 Feb 2018 22:32:01 -0000	1.6
-+++ sys/dev/fdt/axppmic.c	8 Aug 2019 13:46:17 -0000
++++ sys/dev/fdt/axppmic.c	9 Aug 2019 22:27:22 -0000
 @@ -36,6 +36,15 @@ extern void (*powerdownfn)(void);
  #define  AXP209_ADC_EN1_ACIN	(3 << 4)
  #define  AXP209_ADC_EN1_VBUS	(3 << 2)

@@ -1,0 +1,160 @@
+Index: sys/dev/fdt/sxipwm.c
+===================================================================
+RCS file: sys/dev/fdt/sxipwm.c
+diff -N sys/dev/fdt/sxipwm.c
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ sys/dev/fdt/sxipwm.c	9 Aug 2019 22:27:36 -0000
+@@ -0,0 +1,153 @@
++/*	$OpenBSD$	*/
++
++#include <sys/param.h>
++#include <sys/systm.h>
++#include <sys/device.h>
++
++#include <machine/fdt.h>
++#include <machine/bus.h>
++
++#include <dev/ofw/openfirm.h>
++#include <dev/ofw/ofw_clock.h>
++#include <dev/ofw/ofw_pinctrl.h>
++#include <dev/ofw/fdt.h>
++
++#define PWM_CTRL_REG		0x0
++#define PWM_CH0_PERIOD		0x4
++#define PWM_CH0_PRESCAL	0xf
++
++#define PWM0_RDY		(1 << 28)
++#define PWM0_BYPASS		(1 << 9)
++#define PWM_CH0_MODE		(1 << 7)
++#define SCLK_CH0_GATING	(1 << 6)
++#define PWM_CH0_ACT_STA	(1 << 5)
++#define PWM_CH0_EN		(1 << 4)
++
++#define PWM_CH0_CYCLES_SHIFT		16
++#define PWM_CH0_ACT_CYCLES_SHIFT	0
++
++#define HREAD4(sc, reg)					\
++(bus_space_read_4((sc)->sc_iot, (sc)->sc_ioh, (reg)))
++#define HWRITE4(sc, reg, val)					\
++bus_space_write_4((sc)->sc_iot, (sc)->sc_ioh, (reg), (val))
++
++struct sxipwm_softc {
++	struct device		sc_dev;
++	bus_space_tag_t	sc_iot;
++	bus_space_handle_t	sc_ioh;
++	uint32_t		sc_freq;
++};
++
++int sxipwm_match(struct device *, void *, void *);
++void sxipwm_attach(struct device *, struct device *, void *);
++int sxipwm_enable(void *, int);
++int sxipwm_config(void *, uint16_t, uint16_t);
++
++struct cfattach sxipwm_ca = {
++	sizeof (struct sxipwm_softc), sxipwm_match, sxipwm_attach
++};
++
++struct cfdriver sxipwm_cd = {
++	NULL, "sxipwm", DV_DULL
++};
++
++int
++sxipwm_match(struct device *parent, void *match, void *aux)
++{
++	struct fdt_attach_args *faa = aux;
++
++	return OF_is_compatible(faa->fa_node, "allwinner,sun50i-a64-pwm");
++}
++
++void
++sxipwm_attach(struct device *parent, struct device *self, void *aux)
++{
++	struct sxipwm_softc *sc = (struct sxipwm_softc *)self;
++	struct fdt_attach_args *faa = aux;
++	int node = faa->fa_node;
++
++	if (faa->fa_nreg < 1) {
++		printf(": no registers\n");
++		return;
++	}
++
++	sc->sc_freq = clock_get_frequency_idx(faa->fa_node, 0);
++	if (sc->sc_freq == 0) {
++		printf(": no clock\n");
++		return;
++	}
++
++	printf("%s: freq=%u\n", __func__, sc->sc_freq);
++
++	sc->sc_iot = faa->fa_iot;
++	if (bus_space_map(sc->sc_iot, faa->fa_reg[0].addr,
++	    faa->fa_reg[0].size, 0, &sc->sc_ioh)) {
++		printf(": can't map registers\n");
++		return;
++	}
++
++	printf("\n");
++
++	pinctrl_byname(node, "default");
++
++	clock_enable_all(node);
++	reset_deassert_all(node);
++
++	sxipwm_enable(sc, 1);
++	sxipwm_config(sc, 50000, 50000);
++}
++
++int
++sxipwm_enable(void *arg, int enable)
++{
++	struct sxipwm_softc *sc = arg;
++	uint32_t ctrl_reg;
++
++	ctrl_reg = HREAD4(sc, PWM_CTRL_REG);
++
++	if (ctrl_reg & PWM0_RDY) {
++		return EBUSY;
++	}
++
++	if (enable) {
++		ctrl_reg |= (PWM_CH0_EN | SCLK_CH0_GATING);
++	} else {
++		ctrl_reg &= ~(PWM_CH0_EN | SCLK_CH0_GATING);
++	}
++
++	HWRITE4(sc, PWM_CTRL_REG, ctrl_reg);
++
++	return 0;
++}
++
++int
++sxipwm_config(void *arg, uint16_t period, uint16_t duty_cycle)
++{
++	struct sxipwm_softc *sc = arg;
++	uint32_t ctrl_reg, ch_period_reg;
++	uint32_t cycles, act_cycles;
++	uint64_t rate;
++
++	ctrl_reg = HREAD4(sc, PWM_CTRL_REG);
++
++	if (ctrl_reg & PWM0_RDY) {
++		return EBUSY;
++	}
++
++	ctrl_reg &= ~PWM0_BYPASS;
++	ctrl_reg &= ~PWM_CH0_PRESCAL;
++	ctrl_reg &= ~PWM_CH0_MODE;
++
++	ctrl_reg |= PWM_CH0_ACT_STA;
++
++	rate = sc->sc_freq / 120;
++	cycles = (period * rate) / 1000000000;
++	act_cycles = (duty_cycle * rate) / 1000000000;
++	ch_period_reg = (cycles << PWM_CH0_CYCLES_SHIFT) |
++	    (act_cycles << PWM_CH0_ACT_CYCLES_SHIFT);
++
++	HWRITE4(sc, PWM_CH0_PERIOD, ch_period_reg);
++	HWRITE4(sc, PWM_CTRL_REG, ctrl_reg);
++
++	return 0;
++}
