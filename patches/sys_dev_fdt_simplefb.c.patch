@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/dev/fdt/simplefb.c,v
 retrieving revision 1.5
 diff -u -p -r1.5 simplefb.c
 --- sys/dev/fdt/simplefb.c	27 Aug 2018 09:30:07 -0000	1.5
-+++ sys/dev/fdt/simplefb.c	9 Aug 2019 22:27:28 -0000
++++ sys/dev/fdt/simplefb.c	12 Aug 2019 20:00:06 -0000
 @@ -70,6 +70,7 @@ struct simplefb_softc {
  	struct simplefb_format	*sc_format;
  	paddr_t			sc_paddr;

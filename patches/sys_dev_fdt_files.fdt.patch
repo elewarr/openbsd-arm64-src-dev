@@ -1,11 +1,11 @@
 Index: sys/dev/fdt/files.fdt
 ===================================================================
 RCS file: /cvs/src/sys/dev/fdt/files.fdt,v
-retrieving revision 1.80
-diff -u -p -r1.80 files.fdt
---- sys/dev/fdt/files.fdt	11 May 2019 14:43:27 -0000	1.80
-+++ sys/dev/fdt/files.fdt	9 Aug 2019 22:27:25 -0000
-@@ -44,6 +44,18 @@ device	sxitwi: i2cbus
+retrieving revision 1.81
+diff -u -p -r1.81 files.fdt
+--- sys/dev/fdt/files.fdt	11 Aug 2019 11:19:41 -0000	1.81
++++ sys/dev/fdt/files.fdt	12 Aug 2019 20:00:03 -0000
+@@ -48,6 +48,18 @@ device	sxitwi: i2cbus
  attach	sxitwi at fdt
  file	dev/fdt/sxitwi.c		sxitwi
  
