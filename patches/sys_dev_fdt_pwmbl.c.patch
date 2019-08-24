@@ -1,0 +1,205 @@
+Index: sys/dev/fdt/pwmbl.c
+===================================================================
+RCS file: sys/dev/fdt/pwmbl.c
+diff -N sys/dev/fdt/pwmbl.c
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ sys/dev/fdt/pwmbl.c	24 Aug 2019 02:06:09 -0000
+@@ -0,0 +1,198 @@
++/*	$OpenBSD$	*/
++
++#include <sys/param.h>
++#include <sys/systm.h>
++#include <sys/device.h>
++#include <sys/malloc.h>
++
++#include <machine/fdt.h>
++#include <machine/bus.h>
++
++#include <dev/pwm/pwmvar.h>
++#include <dev/ofw/openfirm.h>
++#include <dev/ofw/ofw_gpio.h>
++
++#include <dev/wscons/wsconsio.h>
++
++struct pwmbl_softc {
++	struct device		sc_dev;
++	uint32_t		sc_period;
++	uint8_t		sc_nlevels;
++	uint32_t		*sc_levels;
++	uint32_t		sc_def_level;
++
++	pwm_tag_t		sc_pwm_tag;
++};
++
++extern int			(*simplefb_read_cmd)(u_long, caddr_t);
++extern int			(*simplefb_write_cmd)(u_long, caddr_t);
++
++struct pwmbl_softc *sc_;
++int	pwmbl_match(struct device *, void *, void *);
++void	pwmbl_attach(struct device *, struct device *, void *);
++int	pwmbl_simplefb_read_cmd(ulong, caddr_t);
++int	pwmbl_simplefb_write_cmd(ulong, caddr_t);
++
++struct cfattach pwmbl_ca = {
++	sizeof (struct pwmbl_softc), pwmbl_match, pwmbl_attach
++};
++
++struct cfdriver pwmbl_cd = {
++	NULL, "pwmbl", DV_DULL
++};
++
++
++int
++pwmbl_match(struct device *parent, void *match, void *aux)
++{
++	struct pwm_attach_args *pa = aux;
++
++	printf("%s: %s\n", __func__, pa->pa_name);
++
++	if (strcmp(pa->pa_name, "pwm-backlight") == 0)
++		return 1;
++
++	return 0;
++}
++
++void
++pwmbl_attach(struct device *parent, struct device *self, void *aux)
++{
++	struct pwmbl_softc *sc = (struct pwmbl_softc *)self;
++	struct pwm_attach_args *pa = aux;
++	uint32_t *pwms, *gpios;
++	int len,i, node;
++
++	sc->sc_pwm_tag = pa->pa_tag;
++
++	node = *(int *) pa->pa_cookie;
++
++	// TODO: find pwm node/channel
++	len = OF_getproplen(node, "pwms");
++	if (len < 0)
++		return;
++
++	pwms = malloc(len, M_TEMP, M_WAITOK);
++	OF_getpropintarray(node, "pwms", pwms, len);
++
++	if (pwms[1] != pa->pa_channel) {
++		free(pwms, M_TEMP, len);
++		return;
++	}
++
++	sc->sc_period = pwms[2];
++	for (i = 0; i < len/sizeof(uint32_t); i++) {
++		printf("pwm[%d]: v=%u\n", i, pwms[i]);
++	}
++	free(pwms, M_TEMP, len);
++
++	len = OF_getproplen(node, "enable-gpios");
++	if (len < 0)
++		return;
++
++	gpios = malloc(len, M_TEMP, M_WAITOK);
++	OF_getpropintarray(node, "enable-gpios", gpios, len);
++	gpio_controller_config_pin(&gpios[0], GPIO_CONFIG_OUTPUT);
++	gpio_controller_set_pin(&gpios[0], 1);
++	free(gpios, M_TEMP, len);
++
++	len = OF_getproplen(node, "brightness-levels");
++	if (len < 0)
++		return;
++
++	sc->sc_levels = malloc(len, M_DEVBUF, M_WAITOK);
++	OF_getpropintarray(node, "brightness-levels",
++	    sc->sc_levels, len);
++	sc->sc_nlevels = len/sizeof(uint32_t);
++	for (i = 0; i < len/sizeof(uint32_t); i++) {
++		printf("bl[%d]: v=%u\n", i,sc->sc_levels[i]);
++	}
++
++	sc->sc_def_level = OF_getpropint(node, "default-brightness-level",
++	    sc->sc_levels[sc->sc_nlevels-1]);
++	printf("def: %u\n", sc->sc_def_level);
++
++	printf("%s:pwm_tag=%p\n", __func__, (void *)sc->sc_pwm_tag);
++	pwm_enable(sc->sc_pwm_tag);
++	struct pwm_config config;
++	config.pc_period = 50000;
++	config.pc_duty_cycle = 50000;
++	pwm_set_config(sc->sc_pwm_tag, &config);
++	pwm_get_config(sc->sc_pwm_tag, &config);
++
++	sc_ = sc;
++	simplefb_read_cmd = pwmbl_simplefb_read_cmd;
++	simplefb_write_cmd = pwmbl_simplefb_write_cmd;
++}
++
++int
++pwmbl_simplefb_read_cmd(ulong cmd, caddr_t data)
++{
++	struct wsdisplay_param *dp = (struct wsdisplay_param *)data;
++	struct pwmbl_softc *sc = (struct pwmbl_softc *)sc_;
++	struct pwm_config config;
++	u_int i, bl_val; // TODO uint?
++
++	switch (cmd) {
++	case WSDISPLAYIO_GETPARAM:
++		switch (dp->param) {
++		case WSDISPLAYIO_PARAM_BRIGHTNESS:
++			dp->min = sc->sc_levels[0];
++			dp->max = sc->sc_levels[sc->sc_nlevels - 1];
++
++			pwm_get_config(sc->sc_pwm_tag, &config);
++			bl_val = (config.pc_duty_cycle * sc->sc_levels[sc->sc_nlevels - 1]) / sc->sc_period;
++
++			for (i = 0; i < sc->sc_nlevels; i++) {
++				if (bl_val <= sc->sc_levels[i])
++					break;
++			}
++
++			dp->curval = sc->sc_levels[i];
++
++			return 0;
++			break;
++		}
++		break;
++	default:
++		return -1;
++	}
++	return -1;
++}
++
++int
++pwmbl_simplefb_write_cmd(ulong cmd, caddr_t data)
++{
++	printf("%s: \n", __func__);
++	struct wsdisplay_param *dp = (struct wsdisplay_param *)data;
++	struct pwmbl_softc *sc = (struct pwmbl_softc *)sc_;
++	struct pwm_config config;
++	u_int i;
++
++	switch (cmd) {
++	case WSDISPLAYIO_SETPARAM:
++		switch (dp->param) {
++		case WSDISPLAYIO_PARAM_BRIGHTNESS:
++			pwm_get_config(sc->sc_pwm_tag, &config);
++
++			for (i = 0; i < sc->sc_nlevels; i++) {
++				if (dp->curval <= sc->sc_levels[i])
++					break;
++			}
++
++			config.pc_period = sc->sc_period;
++			config.pc_duty_cycle = (sc->sc_period * sc->sc_levels[i]) / sc->sc_levels[sc->sc_nlevels - 1];
++
++			//			pwm_disable(sc->sc_pwm_tag);
++			pwm_set_config(sc->sc_pwm_tag, &config);
++			//			pwm_enable(sc->sc_pwm_tag);
++
++			return 0;
++			break;
++		}
++		break;
++	default:
++		return -1;
++	}
++	return -1;
++}

@@ -4,8 +4,8 @@ RCS file: /cvs/src/sys/dev/fdt/files.fdt,v
 retrieving revision 1.81
 diff -u -p -r1.81 files.fdt
 --- sys/dev/fdt/files.fdt	11 Aug 2019 11:19:41 -0000	1.81
-+++ sys/dev/fdt/files.fdt	12 Aug 2019 20:00:03 -0000
-@@ -48,6 +48,18 @@ device	sxitwi: i2cbus
++++ sys/dev/fdt/files.fdt	24 Aug 2019 02:06:05 -0000
+@@ -48,6 +48,23 @@ device	sxitwi: i2cbus
  attach	sxitwi at fdt
  file	dev/fdt/sxitwi.c		sxitwi
  
@@ -17,10 +17,24 @@ diff -u -p -r1.81 files.fdt
 +attach	sxiuphy at fdt
 +file	dev/fdt/sxiuphy.c		sxiuphy
 +
-+device	sxipwm
++define	pwm {}
++device	sxipwm: pwm
 +attach	sxipwm at fdt
 +file	dev/fdt/sxipwm.c		sxipwm
++
++device	pwmbl
++attach	pwmbl at pwm
++file	dev/fdt/pwmbl.c		pwmbl
 +
  device	axppmic
  attach	axppmic at i2c
  attach	axppmic at rsb with axppmic_rsb
+@@ -159,7 +176,7 @@ attach	rkgpio at fdt
+ file	dev/fdt/rkgpio.c		rkgpio
+ 
+ device	rkiic: i2cbus
+-attach	rkiic at fdt			
++attach	rkiic at fdt
+ file	dev/fdt/rkiic.c			rkiic
+ 
+ device	rkpmic

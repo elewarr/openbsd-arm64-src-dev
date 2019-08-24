@@ -3,7 +3,7 @@ Index: sys/dev/fdt/sxiuphy.c
 RCS file: sys/dev/fdt/sxiuphy.c
 diff -N sys/dev/fdt/sxiuphy.c
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ sys/dev/fdt/sxiuphy.c	12 Aug 2019 20:00:30 -0000
++++ sys/dev/fdt/sxiuphy.c	24 Aug 2019 02:06:37 -0000
 @@ -0,0 +1,110 @@
 +/*	$OpenBSD$	*/
 +/*

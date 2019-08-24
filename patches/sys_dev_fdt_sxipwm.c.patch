@@ -3,17 +3,19 @@ Index: sys/dev/fdt/sxipwm.c
 RCS file: sys/dev/fdt/sxipwm.c
 diff -N sys/dev/fdt/sxipwm.c
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ sys/dev/fdt/sxipwm.c	12 Aug 2019 20:00:18 -0000
-@@ -0,0 +1,153 @@
++++ sys/dev/fdt/sxipwm.c	24 Aug 2019 02:06:25 -0000
+@@ -0,0 +1,262 @@
 +/*	$OpenBSD$	*/
 +
 +#include <sys/param.h>
 +#include <sys/systm.h>
 +#include <sys/device.h>
++#include <sys/malloc.h>
 +
 +#include <machine/fdt.h>
 +#include <machine/bus.h>
 +
++#include <dev/pwm/pwmvar.h>
 +#include <dev/ofw/openfirm.h>
 +#include <dev/ofw/ofw_clock.h>
 +#include <dev/ofw/ofw_pinctrl.h>
@@ -32,6 +34,7 @@ diff -N sys/dev/fdt/sxipwm.c
 +
 +#define PWM_CH0_CYCLES_SHIFT		16
 +#define PWM_CH0_ACT_CYCLES_SHIFT	0
++#define PWM_CH0_CYCLES_MASK		0xff;
 +
 +#define HREAD4(sc, reg)					\
 +(bus_space_read_4((sc)->sc_iot, (sc)->sc_ioh, (reg)))
@@ -42,13 +45,20 @@ diff -N sys/dev/fdt/sxipwm.c
 +	struct device		sc_dev;
 +	bus_space_tag_t	sc_iot;
 +	bus_space_handle_t	sc_ioh;
++	int			sc_node;
++
++	struct pwm_controller	sc_tag;
++
 +	uint32_t		sc_freq;
 +};
 +
-+int sxipwm_match(struct device *, void *, void *);
-+void sxipwm_attach(struct device *, struct device *, void *);
-+int sxipwm_enable(void *, int);
-+int sxipwm_config(void *, uint16_t, uint16_t);
++int	sxipwm_match(struct device *, void *, void *);
++void	sxipwm_attach(struct device *, struct device *, void *);
++void	sxipwm_scan(struct sxipwm_softc *);
++int	sxipwm_enable(void *);
++int	sxipwm_disable(void *);
++int	sxipwm_get_config(void *, struct pwm_config *);
++int	sxipwm_set_config(void *, struct pwm_config *);
 +
 +struct cfattach sxipwm_ca = {
 +	sizeof (struct sxipwm_softc), sxipwm_match, sxipwm_attach
@@ -71,7 +81,6 @@ diff -N sys/dev/fdt/sxipwm.c
 +{
 +	struct sxipwm_softc *sc = (struct sxipwm_softc *)self;
 +	struct fdt_attach_args *faa = aux;
-+	int node = faa->fa_node;
 +
 +	if (faa->fa_nreg < 1) {
 +		printf(": no registers\n");
@@ -84,9 +93,8 @@ diff -N sys/dev/fdt/sxipwm.c
 +		return;
 +	}
 +
-+	printf("%s: freq=%u\n", __func__, sc->sc_freq);
-+
 +	sc->sc_iot = faa->fa_iot;
++	sc->sc_node = faa->fa_node;
 +	if (bus_space_map(sc->sc_iot, faa->fa_reg[0].addr,
 +	    faa->fa_reg[0].size, 0, &sc->sc_ioh)) {
 +		printf(": can't map registers\n");
@@ -95,18 +103,79 @@ diff -N sys/dev/fdt/sxipwm.c
 +
 +	printf("\n");
 +
-+	pinctrl_byname(node, "default");
++	pinctrl_byname(sc->sc_node, "default");
 +
-+	clock_enable_all(node);
-+	reset_deassert_all(node);
++	clock_enable_all(sc->sc_node);
++	reset_deassert_all(sc->sc_node);
 +
-+	sxipwm_enable(sc, 1);
-+	sxipwm_config(sc, 50000, 50000);
++	sxipwm_enable(sc);
++	printf(">>>\n");
++
++	sc->sc_tag.pc_cookie = sc;
++	sc->sc_tag.pc_enable = sxipwm_enable;
++	sc->sc_tag.pc_disable = sxipwm_disable;
++	sc->sc_tag.pc_set_config = sxipwm_set_config;
++	sc->sc_tag.pc_get_config = sxipwm_get_config;
++
++	sxipwm_scan(sc);
++}
++
++void
++sxipwm_scan(struct sxipwm_softc *sc)
++{
++	struct pwm_attach_args pa;
++	char name[32];
++	int len, pwm_node, node = OF_finddevice("/");
++	int i;
++	uint32_t *pwms;
++
++	printf("%s: scan for root %d\n", __func__, node);
++	printf("%s: scan for node %d\n", __func__, sc->sc_node);
++
++	if (node == 0)
++		return;
++
++	for (node = OF_child(node); node; node = OF_peer(node)) {
++		memset(name, 0, sizeof(name));
++
++		if (OF_getprop(node, "compatible", name, sizeof(name)) == -1)
++			continue;
++
++		if (name[0] == '\0')
++			continue;
++
++		len = OF_getproplen(node, "pwms");
++		if (len < 0)
++			continue;
++
++		pwms = malloc(len, M_TEMP, M_WAITOK);
++		OF_getpropintarray(node, "pwms", pwms, len);
++		for (i = 0; i < len/sizeof(uint32_t); i++) {
++			printf("pwm[%d]: v=%u\n", i, pwms[i]);
++		}
++		pwm_node = OF_getnodebyphandle(pwms[0]);
++		printf("%s: scan for pwm %d\n", __func__, pwm_node);
++
++		if (sc->sc_node != pwm_node)
++			continue;
++
++		free(pwms, M_TEMP, len);
++
++		printf("name=%s\n", name);
++		memset(&pa, 0, sizeof(pa));
++		pa.pa_tag = &sc->sc_tag;
++		pa.pa_name = name;
++		pa.pa_cookie = &node;
++		pa.pa_channel = 0;
++
++		config_found(&sc->sc_dev, &pa, NULL);
++	}
 +}
 +
 +int
-+sxipwm_enable(void *arg, int enable)
++sxipwm_enable_arg(void *arg, int enable)
 +{
++	printf("%s: enable=%d\n", __func__, enable);
 +	struct sxipwm_softc *sc = arg;
 +	uint32_t ctrl_reg;
 +
@@ -128,12 +197,52 @@ diff -N sys/dev/fdt/sxipwm.c
 +}
 +
 +int
-+sxipwm_config(void *arg, uint16_t period, uint16_t duty_cycle)
++sxipwm_enable(void *arg)
++{
++	return sxipwm_enable_arg(arg, 1);
++}
++
++int
++sxipwm_disable(void *arg)
++{
++
++	return sxipwm_enable_arg(arg, 0);
++}
++
++int
++sxipwm_get_config(void *arg, struct pwm_config *config)
 +{
 +	struct sxipwm_softc *sc = arg;
 +	uint32_t ctrl_reg, ch_period_reg;
-+	uint32_t cycles, act_cycles;
++	uint16_t cycles, act_cycles;
 +	uint64_t rate;
++
++	ctrl_reg = HREAD4(sc, PWM_CTRL_REG);
++	ch_period_reg = HREAD4(sc, PWM_CH0_PERIOD);
++
++	rate = sc->sc_freq / 120;
++	cycles = ((ch_period_reg >> PWM_CH0_CYCLES_SHIFT) + 1 ) & PWM_CH0_CYCLES_MASK;
++	act_cycles = (ch_period_reg >> PWM_CH0_ACT_CYCLES_SHIFT) & PWM_CH0_CYCLES_MASK;
++
++	config->pc_period = ((uint64_t)cycles * 1000000000) / rate;
++	config->pc_duty_cycle = ((uint64_t)act_cycles * 1000000000) / rate;
++
++	printf("%s: period=%d, duty_cycle=%d\n", __func__, config->pc_period, config->pc_duty_cycle);
++
++	return 0;
++}
++
++int
++sxipwm_set_config(void *arg, struct pwm_config *config)
++{
++	struct sxipwm_softc *sc = arg;
++	uint16_t period = config->pc_period;
++	uint16_t duty_cycle = config->pc_duty_cycle;
++	uint32_t ctrl_reg, ch_period_reg;
++	uint16_t cycles, act_cycles;
++	uint64_t rate;
++
++	printf("%s: period=%d, duty_cycle=%d\n", __func__, config->pc_period, config->pc_duty_cycle);
 +
 +	ctrl_reg = HREAD4(sc, PWM_CTRL_REG);
 +
@@ -150,7 +259,7 @@ diff -N sys/dev/fdt/sxipwm.c
 +	rate = sc->sc_freq / 120;
 +	cycles = (period * rate) / 1000000000;
 +	act_cycles = (duty_cycle * rate) / 1000000000;
-+	ch_period_reg = (cycles << PWM_CH0_CYCLES_SHIFT) |
++	ch_period_reg = ((cycles - 1) << PWM_CH0_CYCLES_SHIFT) |
 +	    (act_cycles << PWM_CH0_ACT_CYCLES_SHIFT);
 +
 +	HWRITE4(sc, PWM_CH0_PERIOD, ch_period_reg);

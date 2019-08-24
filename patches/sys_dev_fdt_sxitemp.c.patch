@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/dev/fdt/sxitemp.c,v
 retrieving revision 1.4
 diff -u -p -r1.4 sxitemp.c
 --- sys/dev/fdt/sxitemp.c	27 May 2018 21:59:26 -0000	1.4
-+++ sys/dev/fdt/sxitemp.c	12 Aug 2019 20:00:26 -0000
++++ sys/dev/fdt/sxitemp.c	24 Aug 2019 02:06:32 -0000
 @@ -19,6 +19,7 @@
  #include <sys/systm.h>
  #include <sys/device.h>
