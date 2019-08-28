@@ -1,10 +1,10 @@
 Index: sys/arch/arm64/conf/GENERIC
 ===================================================================
 RCS file: /cvs/src/sys/arch/arm64/conf/GENERIC,v
-retrieving revision 1.110
-diff -u -p -r1.110 GENERIC
---- sys/arch/arm64/conf/GENERIC	20 Aug 2019 17:16:43 -0000	1.110
-+++ sys/arch/arm64/conf/GENERIC	24 Aug 2019 02:05:56 -0000
+retrieving revision 1.117
+diff -u -p -r1.117 GENERIC
+--- sys/arch/arm64/conf/GENERIC	28 Aug 2019 10:17:59 -0000	1.117
++++ sys/arch/arm64/conf/GENERIC	28 Aug 2019 22:15:54 -0000
 @@ -106,6 +106,7 @@ option	WSDISPLAY_DEFAULTSCREENS=6	# init
  
  simplefb*	at fdt?
@@ -13,7 +13,7 @@ diff -u -p -r1.110 GENERIC
  
  radeondrm*	at pci?
  drm*		at radeondrm?
-@@ -181,8 +182,11 @@ sxirtc*		at fdt? early 1	# Real Time Clo
+@@ -192,8 +193,11 @@ sxirtc*		at fdt? early 1	# Real Time Clo
  sximmc*		at fdt?		# SD/MMC card controller
  sdmmc*		at sximmc?	# SD/MMC bus
  sxisyscon*	at fdt? early 1	# System controller

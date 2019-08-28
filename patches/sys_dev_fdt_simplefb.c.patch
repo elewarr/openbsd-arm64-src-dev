@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/dev/fdt/simplefb.c,v
 retrieving revision 1.5
 diff -u -p -r1.5 simplefb.c
 --- sys/dev/fdt/simplefb.c	27 Aug 2018 09:30:07 -0000	1.5
-+++ sys/dev/fdt/simplefb.c	24 Aug 2019 02:06:14 -0000
++++ sys/dev/fdt/simplefb.c	28 Aug 2019 22:16:11 -0000
 @@ -72,6 +72,9 @@ struct simplefb_softc {
  	psize_t			sc_psize;
  };

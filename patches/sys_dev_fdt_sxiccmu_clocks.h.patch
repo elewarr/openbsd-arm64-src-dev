@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/dev/fdt/sxiccmu_clocks.h,v
 retrieving revision 1.25
 diff -u -p -r1.25 sxiccmu_clocks.h
 --- sys/dev/fdt/sxiccmu_clocks.h	19 Aug 2019 06:13:44 -0000	1.25
-+++ sys/dev/fdt/sxiccmu_clocks.h	24 Aug 2019 02:06:22 -0000
++++ sys/dev/fdt/sxiccmu_clocks.h	28 Aug 2019 22:16:20 -0000
 @@ -140,9 +140,12 @@ struct sxiccmu_ccu_bit sun8i_a23_gates[]
  
  /* A64 */
