@@ -3,8 +3,8 @@ Index: sys/dev/fdt/pwmbl.c
 RCS file: sys/dev/fdt/pwmbl.c
 diff -N sys/dev/fdt/pwmbl.c
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ sys/dev/fdt/pwmbl.c	28 Aug 2019 22:16:07 -0000
-@@ -0,0 +1,198 @@
++++ sys/dev/fdt/pwmbl.c	12 Sep 2019 23:48:55 -0000
+@@ -0,0 +1,199 @@
 +/*	$OpenBSD$	*/
 +
 +#include <sys/param.h>
@@ -54,7 +54,7 @@ diff -N sys/dev/fdt/pwmbl.c
 +{
 +	struct pwm_attach_args *pa = aux;
 +
-+	printf("%s: %s\n", __func__, pa->pa_name);
++	//printf("%s: %s\n", __func__, pa->pa_name);
 +
 +	if (strcmp(pa->pa_name, "pwm-backlight") == 0)
 +		return 1;
@@ -67,6 +67,7 @@ diff -N sys/dev/fdt/pwmbl.c
 +{
 +	struct pwmbl_softc *sc = (struct pwmbl_softc *)self;
 +	struct pwm_attach_args *pa = aux;
++	struct pwm_config config;
 +	uint32_t *pwms, *gpios;
 +	int len,i, node;
 +
@@ -89,7 +90,7 @@ diff -N sys/dev/fdt/pwmbl.c
 +
 +	sc->sc_period = pwms[2];
 +	for (i = 0; i < len/sizeof(uint32_t); i++) {
-+		printf("pwm[%d]: v=%u\n", i, pwms[i]);
++		//printf("pwm[%d]: v=%u\n", i, pwms[i]);
 +	}
 +	free(pwms, M_TEMP, len);
 +
@@ -112,18 +113,18 @@ diff -N sys/dev/fdt/pwmbl.c
 +	    sc->sc_levels, len);
 +	sc->sc_nlevels = len/sizeof(uint32_t);
 +	for (i = 0; i < len/sizeof(uint32_t); i++) {
-+		printf("bl[%d]: v=%u\n", i,sc->sc_levels[i]);
++		//printf("bl[%d]: v=%u\n", i,sc->sc_levels[i]);
 +	}
 +
 +	sc->sc_def_level = OF_getpropint(node, "default-brightness-level",
 +	    sc->sc_levels[sc->sc_nlevels-1]);
-+	printf("def: %u\n", sc->sc_def_level);
++	//printf("def: %u\n", sc->sc_def_level);
 +
-+	printf("%s:pwm_tag=%p\n", __func__, (void *)sc->sc_pwm_tag);
++	//printf("%s:pwm_tag=%p\n", __func__, (void *)sc->sc_pwm_tag);
 +	pwm_enable(sc->sc_pwm_tag);
-+	struct pwm_config config;
-+	config.pc_period = 50000;
-+	config.pc_duty_cycle = 50000;
++
++	config.pc_period = sc->sc_period;
++	config.pc_duty_cycle = (config.pc_period * sc->sc_levels[sc->sc_def_level]) / sc->sc_levels[sc->sc_nlevels - 1];
 +	pwm_set_config(sc->sc_pwm_tag, &config);
 +	pwm_get_config(sc->sc_pwm_tag, &config);
 +
@@ -170,7 +171,7 @@ diff -N sys/dev/fdt/pwmbl.c
 +int
 +pwmbl_simplefb_write_cmd(ulong cmd, caddr_t data)
 +{
-+	printf("%s: \n", __func__);
++	//printf("%s: \n", __func__);
 +	struct wsdisplay_param *dp = (struct wsdisplay_param *)data;
 +	struct pwmbl_softc *sc = (struct pwmbl_softc *)sc_;
 +	struct pwm_config config;

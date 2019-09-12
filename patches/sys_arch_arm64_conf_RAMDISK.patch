@@ -1,11 +1,11 @@
 Index: sys/arch/arm64/conf/RAMDISK
 ===================================================================
 RCS file: /cvs/src/sys/arch/arm64/conf/RAMDISK,v
-retrieving revision 1.95
-diff -u -p -r1.95 RAMDISK
---- sys/arch/arm64/conf/RAMDISK	28 Aug 2019 07:12:37 -0000	1.95
-+++ sys/arch/arm64/conf/RAMDISK	28 Aug 2019 22:15:58 -0000
-@@ -109,6 +109,7 @@ vioscsi*	at virtio?
+retrieving revision 1.103
+diff -u -p -r1.103 RAMDISK
+--- sys/arch/arm64/conf/RAMDISK	9 Sep 2019 20:00:27 -0000	1.103
++++ sys/arch/arm64/conf/RAMDISK	12 Sep 2019 23:48:45 -0000
+@@ -107,6 +107,7 @@ vioscsi*	at virtio?
  
  simplefb*	at fdt?
  wsdisplay*	at simplefb?
@@ -13,7 +13,7 @@ diff -u -p -r1.95 RAMDISK
  
  # iMX
  imxccm*		at fdt? early 1
-@@ -178,7 +179,9 @@ sxirtc*		at fdt? early 1	# Real Time Clo
+@@ -185,7 +186,9 @@ sxirtc*		at fdt? early 1	# Real Time Clo
  sximmc*		at fdt?		# SD/MMC card controller
  sdmmc*		at sximmc?	# SD/MMC bus
  sxisyscon*	at fdt? early 1	# System controller

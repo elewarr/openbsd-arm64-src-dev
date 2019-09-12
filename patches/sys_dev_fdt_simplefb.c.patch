@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/dev/fdt/simplefb.c,v
 retrieving revision 1.5
 diff -u -p -r1.5 simplefb.c
 --- sys/dev/fdt/simplefb.c	27 Aug 2018 09:30:07 -0000	1.5
-+++ sys/dev/fdt/simplefb.c	28 Aug 2019 22:16:11 -0000
++++ sys/dev/fdt/simplefb.c	12 Sep 2019 23:48:59 -0000
 @@ -72,6 +72,9 @@ struct simplefb_softc {
  	psize_t			sc_psize;
  };
@@ -15,7 +15,7 @@ diff -u -p -r1.5 simplefb.c
  struct rasops_info simplefb_ri;
  struct wsscreen_descr simplefb_wsd = { "std" };
  struct wsdisplay_charcell simplefb_bs[SIMPLEFB_WIDTH * SIMPLEFB_HEIGHT];
-@@ -230,9 +233,36 @@ int
+@@ -230,9 +233,32 @@ int
  simplefb_wsioctl(void *v, u_long cmd, caddr_t data, int flag, struct proc *p)
  {
  	struct rasops_info *ri = v;
@@ -26,9 +26,7 @@ diff -u -p -r1.5 simplefb.c
 +	case WSDISPLAYIO_GETPARAM:
 +		switch (dp->param) {
 +		case WSDISPLAYIO_PARAM_BRIGHTNESS:
-+			printf("%s: get\n", __func__);
 +			if (simplefb_read_cmd) {
-+				printf("get really now\n");
 +				return simplefb_read_cmd(cmd, data);
 +			}
 +			break;
@@ -39,9 +37,7 @@ diff -u -p -r1.5 simplefb.c
 +	case WSDISPLAYIO_SETPARAM:
 +		switch (dp->param) {
 +		case WSDISPLAYIO_PARAM_BRIGHTNESS:
-+			printf("%s: set\n", __func__);
 +			if (simplefb_write_cmd) {
-+				printf("set really now\n");
 +				return simplefb_write_cmd(cmd, data);
 +			}
 +			break;

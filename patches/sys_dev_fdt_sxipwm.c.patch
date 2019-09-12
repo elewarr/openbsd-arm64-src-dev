@@ -3,8 +3,8 @@ Index: sys/dev/fdt/sxipwm.c
 RCS file: sys/dev/fdt/sxipwm.c
 diff -N sys/dev/fdt/sxipwm.c
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ sys/dev/fdt/sxipwm.c	28 Aug 2019 22:16:23 -0000
-@@ -0,0 +1,262 @@
++++ sys/dev/fdt/sxipwm.c	12 Sep 2019 23:49:07 -0000
+@@ -0,0 +1,261 @@
 +/*	$OpenBSD$	*/
 +
 +#include <sys/param.h>
@@ -109,7 +109,6 @@ diff -N sys/dev/fdt/sxipwm.c
 +	reset_deassert_all(sc->sc_node);
 +
 +	sxipwm_enable(sc);
-+	printf(">>>\n");
 +
 +	sc->sc_tag.pc_cookie = sc;
 +	sc->sc_tag.pc_enable = sxipwm_enable;
@@ -129,8 +128,8 @@ diff -N sys/dev/fdt/sxipwm.c
 +	int i;
 +	uint32_t *pwms;
 +
-+	printf("%s: scan for root %d\n", __func__, node);
-+	printf("%s: scan for node %d\n", __func__, sc->sc_node);
++	//printf("%s: scan for root %d\n", __func__, node);
++	//printf("%s: scan for node %d\n", __func__, sc->sc_node);
 +
 +	if (node == 0)
 +		return;
@@ -151,17 +150,17 @@ diff -N sys/dev/fdt/sxipwm.c
 +		pwms = malloc(len, M_TEMP, M_WAITOK);
 +		OF_getpropintarray(node, "pwms", pwms, len);
 +		for (i = 0; i < len/sizeof(uint32_t); i++) {
-+			printf("pwm[%d]: v=%u\n", i, pwms[i]);
++			//printf("pwm[%d]: v=%u\n", i, pwms[i]);
 +		}
 +		pwm_node = OF_getnodebyphandle(pwms[0]);
-+		printf("%s: scan for pwm %d\n", __func__, pwm_node);
++		//printf("%s: scan for pwm %d\n", __func__, pwm_node);
 +
 +		if (sc->sc_node != pwm_node)
 +			continue;
 +
 +		free(pwms, M_TEMP, len);
 +
-+		printf("name=%s\n", name);
++		//printf("name=%s\n", name);
 +		memset(&pa, 0, sizeof(pa));
 +		pa.pa_tag = &sc->sc_tag;
 +		pa.pa_name = name;
@@ -175,7 +174,7 @@ diff -N sys/dev/fdt/sxipwm.c
 +int
 +sxipwm_enable_arg(void *arg, int enable)
 +{
-+	printf("%s: enable=%d\n", __func__, enable);
++	//printf("%s: enable=%d\n", __func__, enable);
 +	struct sxipwm_softc *sc = arg;
 +	uint32_t ctrl_reg;
 +
@@ -227,7 +226,7 @@ diff -N sys/dev/fdt/sxipwm.c
 +	config->pc_period = ((uint64_t)cycles * 1000000000) / rate;
 +	config->pc_duty_cycle = ((uint64_t)act_cycles * 1000000000) / rate;
 +
-+	printf("%s: period=%d, duty_cycle=%d\n", __func__, config->pc_period, config->pc_duty_cycle);
++	//printf("%s: period=%d, duty_cycle=%d\n", __func__, config->pc_period, config->pc_duty_cycle);
 +
 +	return 0;
 +}
@@ -242,7 +241,7 @@ diff -N sys/dev/fdt/sxipwm.c
 +	uint16_t cycles, act_cycles;
 +	uint64_t rate;
 +
-+	printf("%s: period=%d, duty_cycle=%d\n", __func__, config->pc_period, config->pc_duty_cycle);
++	//printf("%s: period=%d, duty_cycle=%d\n", __func__, config->pc_period, config->pc_duty_cycle);
 +
 +	ctrl_reg = HREAD4(sc, PWM_CTRL_REG);
 +

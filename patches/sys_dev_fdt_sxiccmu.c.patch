@@ -1,0 +1,16 @@
+Index: sys/dev/fdt/sxiccmu.c
+===================================================================
+RCS file: /cvs/src/sys/dev/fdt/sxiccmu.c,v
+retrieving revision 1.24
+diff -u -p -r1.24 sxiccmu.c
+--- sys/dev/fdt/sxiccmu.c	8 Sep 2019 16:45:21 -0000	1.24
++++ sys/dev/fdt/sxiccmu.c	12 Sep 2019 23:49:04 -0000
+@@ -1489,7 +1489,7 @@ sxiccmu_a64_set_frequency(struct sxiccmu
+ 		/* Wait for PLL to lock. */
+ 		while ((SXIREAD4(sc, A64_PLL_CPUX_CTRL_REG) &
+ 		    A64_PLL_CPUX_LOCK) == 0) {
+-			delay(200);
++			delay(500);
+ 		}
+ 
+ 		return 0;

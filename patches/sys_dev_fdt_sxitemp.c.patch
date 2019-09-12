@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/dev/fdt/sxitemp.c,v
 retrieving revision 1.4
 diff -u -p -r1.4 sxitemp.c
 --- sys/dev/fdt/sxitemp.c	27 May 2018 21:59:26 -0000	1.4
-+++ sys/dev/fdt/sxitemp.c	28 Aug 2019 22:16:33 -0000
++++ sys/dev/fdt/sxitemp.c	12 Sep 2019 23:49:16 -0000
 @@ -19,6 +19,7 @@
  #include <sys/systm.h>
  #include <sys/device.h>
@@ -13,7 +13,15 @@ diff -u -p -r1.4 sxitemp.c
  
  #include <machine/intr.h>
  #include <machine/bus.h>
-@@ -46,6 +47,7 @@
+@@ -28,6 +29,7 @@
+ #include <dev/ofw/ofw_clock.h>
+ #include <dev/ofw/ofw_misc.h>
+ #include <dev/ofw/ofw_pinctrl.h>
++#include <dev/ofw/ofw_thermal.h>
+ #include <dev/ofw/fdt.h>
+ 
+ /* Registers */
+@@ -46,6 +48,7 @@
  #define THS0_DATA			0x0080
  #define THS1_DATA			0x0084
  #define THS2_DATA			0x0088
@@ -21,22 +29,35 @@ diff -u -p -r1.4 sxitemp.c
  
  #define HREAD4(sc, reg)							\
  	(bus_space_read_4((sc)->sc_iot, (sc)->sc_ioh, (reg)))
-@@ -81,7 +83,13 @@ uint64_t sxitemp_r40_calc_temp(int64_t);
+@@ -63,6 +66,8 @@ struct sxitemp_softc {
+ 
+ 	struct ksensor		sc_sensors[3];
+ 	struct ksensordev	sc_sensordev;
++
++	struct thermal_sensor	sc_ts;
+ };
+ 
+ int	sxitemp_match(struct device *, void *, void *);
+@@ -76,12 +81,18 @@ struct cfdriver sxitemp_cd = {
+ 	NULL, "sxitemp", DV_DULL
+ };
+ 
++extern uint32_t sxisid_read(bus_size_t, uint32_t, uint8_t *);
++
+ uint64_t sxitemp_h3_calc_temp(int64_t);
+ uint64_t sxitemp_r40_calc_temp(int64_t);
  uint64_t sxitemp_a64_calc_temp(int64_t);
  uint64_t sxitemp_h5_calc_temp0(int64_t);
  uint64_t sxitemp_h5_calc_temp1(int64_t);
--void	sxitemp_refresh_sensors(void *);
-+void sxitemp_refresh_sensors(void *);
-+void sxitemp_setup_calib(struct sxitemp_softc *,
-+	struct fdt_attach_args *);
-+void sxitemp_tx(struct sxitemp_softc *, uint32_t, uint32_t, uint32_t *);
+ void	sxitemp_refresh_sensors(void *);
++void	sxitemp_setup_calib(struct sxitemp_softc *, struct fdt_attach_args *);
++void	sxitemp_tx(struct sxitemp_softc *, uint32_t, uint32_t, uint32_t *);
 +uint32_t sxitemp_calib_mask(uint32_t, uint32_t);
-+
-+extern uint32_t sxisid_read(bus_size_t, uint32_t, uint8_t *);
++int32_t sxitemp_get_temperature(void *, uint32_t *);
  
  int
  sxitemp_match(struct device *parent, void *match, void *aux)
-@@ -140,6 +148,8 @@ sxitemp_attach(struct device *parent, st
+@@ -140,6 +151,8 @@ sxitemp_attach(struct device *parent, st
  		enable = THS_CTRL2_SENSE0_EN | THS_CTRL2_SENSE1_EN;
  	}
  
@@ -45,7 +66,19 @@ diff -u -p -r1.4 sxitemp.c
  	/* Start data acquisition. */
  	HWRITE4(sc, THS_FILTER, THS_FILTER_EN | THS_FILTER_TYPE(1));
  	HWRITE4(sc, THS_INT_CTRL, THS_INT_CTRL_THERMAL_PER(800));
-@@ -236,4 +246,74 @@ sxitemp_refresh_sensors(void *arg)
+@@ -172,6 +185,11 @@ sxitemp_attach(struct device *parent, st
+ 	}
+ 	sensordev_install(&sc->sc_sensordev);
+ 	sensor_task_register(sc, sxitemp_refresh_sensors, 5);
++
++	sc->sc_ts.ts_node = node;
++	sc->sc_ts.ts_cookie = sc;
++	sc->sc_ts.ts_get_temperature = sxitemp_get_temperature;
++	thermal_sensor_register(&sc->sc_ts);
+ }
+ 
+ uint64_t
+@@ -236,4 +254,95 @@ sxitemp_refresh_sensors(void *arg)
  		sc->sc_sensors[2].value = sc->sc_calc_temp2(data) + 273150000;
  		sc->sc_sensors[2].flags &= ~SENSOR_FINVALID;
  	}
@@ -119,4 +152,25 @@ diff -u -p -r1.4 sxitemp.c
 +		}
 +	}
 +	return calib_mask;
++}
++
++int32_t
++sxitemp_get_temperature(void *cookie, uint32_t *cells)
++{
++	struct sxitemp_softc *sc = cookie;
++	uint32_t idx = cells[0];
++	uint32_t data;
++
++	if (idx == 0 && sc->sc_calc_temp0) {
++		data = HREAD4(sc, THS0_DATA);
++		return sc->sc_calc_temp0(data);
++	} else if (idx == 1 && sc->sc_calc_temp1) {
++		data = HREAD4(sc, THS1_DATA);
++		return sc->sc_calc_temp1(data);
++	} else if (idx == 2 && sc->sc_calc_temp2) {
++		data = HREAD4(sc, THS2_DATA);
++		return sc->sc_calc_temp2(data);
++	}
++
++	return THERMAL_SENSOR_MAX;
  }
