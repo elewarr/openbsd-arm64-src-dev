@@ -1,0 +1,40 @@
+Index: sys/dev/ofw/ofw_thermal.c
+===================================================================
+RCS file: /cvs/src/sys/dev/ofw/ofw_thermal.c,v
+retrieving revision 1.4
+diff -u -p -r1.4 ofw_thermal.c
+--- sys/dev/ofw/ofw_thermal.c	28 Aug 2019 19:37:56 -0000	1.4
++++ sys/dev/ofw/ofw_thermal.c	21 Sep 2019 22:23:25 -0000
+@@ -350,8 +350,12 @@ thermal_zone_init(int node)
+ 	 * Trip points for this thermal zone.
+ 	 */
+ 	node = OF_getnodebyname(tz->tz_node, "trips");
+-	for (node = OF_child(node); node != 0; node = OF_peer(node))
++	for (node = OF_child(node); node != 0; node = OF_peer(node)) {
++		if (OF_getpropint(node, "phandle", 0) == 0)
++			continue;
++
+ 		tz->tz_ntrips++;
++	}
+ 
+ 	tz->tz_trips = mallocarray(tz->tz_ntrips, sizeof(struct trippoint),
+ 	    M_DEVBUF, M_ZERO | M_WAITOK);
+@@ -361,6 +365,10 @@ thermal_zone_init(int node)
+ 	for (node = OF_child(node); node != 0; node = OF_peer(node)) {
+ 		char type[32] = "none";
+ 
++		tp->tp_phandle = OF_getpropint(node, "phandle", 0);
++		if (tp->tp_phandle == 0)
++			continue;
++
+ 		tp->tp_temperature =
+ 		    OF_getpropint(node, "temperature", THERMAL_SENSOR_MAX);
+ 		tp->tp_hysteresis = OF_getpropint(node, "hysteresis", 0);
+@@ -373,7 +381,6 @@ thermal_zone_init(int node)
+ 			tp->tp_type = THERMAL_HOT;
+ 		else if (strcmp(type, "critical") == 0)
+ 			tp->tp_type = THERMAL_CRITICAL;
+-		tp->tp_phandle = OF_getpropint(node, "phandle", 0);
+ 		tp++;
+ 	}
+ 

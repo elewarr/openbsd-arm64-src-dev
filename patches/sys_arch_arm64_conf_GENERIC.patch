@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/arch/arm64/conf/GENERIC,v
 retrieving revision 1.125
 diff -u -p -r1.125 GENERIC
 --- sys/arch/arm64/conf/GENERIC	9 Sep 2019 20:00:27 -0000	1.125
-+++ sys/arch/arm64/conf/GENERIC	12 Sep 2019 23:48:40 -0000
++++ sys/arch/arm64/conf/GENERIC	21 Sep 2019 22:22:56 -0000
 @@ -104,6 +104,7 @@ option	WSDISPLAY_DEFAULTSCREENS=6	# init
  
  simplefb*	at fdt?
