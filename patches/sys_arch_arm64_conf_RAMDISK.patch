@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/arch/arm64/conf/RAMDISK,v
 retrieving revision 1.103
 diff -u -p -r1.103 RAMDISK
 --- sys/arch/arm64/conf/RAMDISK	9 Sep 2019 20:00:27 -0000	1.103
-+++ sys/arch/arm64/conf/RAMDISK	21 Sep 2019 22:22:59 -0000
++++ sys/arch/arm64/conf/RAMDISK	28 Sep 2019 00:15:53 -0000
 @@ -107,6 +107,7 @@ vioscsi*	at virtio?
  
  simplefb*	at fdt?

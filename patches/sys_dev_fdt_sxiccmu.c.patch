@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/dev/fdt/sxiccmu.c,v
 retrieving revision 1.26
 diff -u -p -r1.26 sxiccmu.c
 --- sys/dev/fdt/sxiccmu.c	21 Sep 2019 15:01:26 -0000	1.26
-+++ sys/dev/fdt/sxiccmu.c	21 Sep 2019 22:23:12 -0000
++++ sys/dev/fdt/sxiccmu.c	28 Sep 2019 00:16:04 -0000
 @@ -1547,7 +1547,7 @@ sxiccmu_a64_set_frequency(struct sxiccmu
  		/* Wait for PLL to lock. */
  		while ((SXIREAD4(sc, A64_PLL_CPUX_CTRL_REG) &
