@@ -3,8 +3,8 @@ Index: sys/dev/fdt/sxipwm.c
 RCS file: sys/dev/fdt/sxipwm.c
 diff -N sys/dev/fdt/sxipwm.c
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ sys/dev/fdt/sxipwm.c	28 Sep 2019 00:16:07 -0000
-@@ -0,0 +1,318 @@
++++ sys/dev/fdt/sxipwm.c	28 Sep 2019 01:19:44 -0000
+@@ -0,0 +1,323 @@
 +/*	$OpenBSD$	*/
 +
 +#include <sys/param.h>
@@ -208,7 +208,6 @@ diff -N sys/dev/fdt/sxipwm.c
 +	if (enable) {
 +		ctrl_reg &= ~PWM0_BYPASS;
 +		ctrl_reg &= ~PWM_CH0_MODE;
-+		ctrl_reg |= PWM_CH0_ACT_STA;
 +		ctrl_reg |= (PWM_CH0_EN | SCLK_CH0_GATING);
 +	} else {
 +		ctrl_reg &= ~(PWM_CH0_EN | SCLK_CH0_GATING);
@@ -307,6 +306,12 @@ diff -N sys/dev/fdt/sxipwm.c
 +
 +	if (ctrl_reg & PWM0_RDY) {
 +		return EBUSY;
++	}
++
++	if (config->pc_polarity == PWM_POLARITY_INVERTED) {
++		ctrl_reg &= ~PWM_CH0_ACT_STA;
++	} else {
++		ctrl_reg |= PWM_CH0_ACT_STA;
 +	}
 +
 +	ctrl_reg &= ~PWM_CH0_PRESCAL;

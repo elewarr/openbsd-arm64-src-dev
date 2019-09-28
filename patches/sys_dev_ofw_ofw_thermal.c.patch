@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/dev/ofw/ofw_thermal.c,v
 retrieving revision 1.4
 diff -u -p -r1.4 ofw_thermal.c
 --- sys/dev/ofw/ofw_thermal.c	28 Aug 2019 19:37:56 -0000	1.4
-+++ sys/dev/ofw/ofw_thermal.c	28 Sep 2019 00:16:18 -0000
++++ sys/dev/ofw/ofw_thermal.c	28 Sep 2019 01:19:55 -0000
 @@ -350,8 +350,12 @@ thermal_zone_init(int node)
  	 * Trip points for this thermal zone.
  	 */

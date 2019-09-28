@@ -3,13 +3,17 @@ Index: sys/dev/pwm/pwmvar.h
 RCS file: sys/dev/pwm/pwmvar.h
 diff -N sys/dev/pwm/pwmvar.h
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ sys/dev/pwm/pwmvar.h	28 Sep 2019 00:16:21 -0000
-@@ -0,0 +1,32 @@
++++ sys/dev/pwm/pwmvar.h	28 Sep 2019 01:19:57 -0000
+@@ -0,0 +1,36 @@
 +/*	$OpenBSD$	*/
 +
++#define PWM_POLARITY_NOT_INVERTED	0
++#define PWM_POLARITY_INVERTED		1
++
 +struct pwm_config {
-+	uint64_t pc_period;
-+	uint64_t pc_duty_cycle;
++	uint64_t	pc_period;
++	uint64_t	pc_duty_cycle;
++	uint8_t	pc_polarity;
 +};
 +
 +typedef struct pwm_controller {

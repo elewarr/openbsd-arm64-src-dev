@@ -3,8 +3,8 @@ Index: sys/dev/fdt/pwmbl.c
 RCS file: sys/dev/fdt/pwmbl.c
 diff -N sys/dev/fdt/pwmbl.c
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ sys/dev/fdt/pwmbl.c	28 Sep 2019 00:15:59 -0000
-@@ -0,0 +1,185 @@
++++ sys/dev/fdt/pwmbl.c	28 Sep 2019 01:19:35 -0000
+@@ -0,0 +1,194 @@
 +/*	$OpenBSD$	*/
 +
 +#include <sys/param.h>
@@ -23,7 +23,8 @@ diff -N sys/dev/fdt/pwmbl.c
 +
 +struct pwmbl_softc {
 +	struct device		sc_dev;
-+	uint32_t		sc_period;
++	uint64_t		sc_period;
++	uint8_t		sc_polarity;
 +	uint8_t		sc_nlevels;
 +	uint32_t		*sc_levels;
 +	uint32_t		sc_def_level;
@@ -73,9 +74,8 @@ diff -N sys/dev/fdt/pwmbl.c
 +
 +	node = *(int *) pa->pa_cookie;
 +
-+	// TODO: find pwm node/channel
 +	len = OF_getproplen(node, "pwms");
-+	if (len < 0)
++	if (len < 3)
 +		return;
 +
 +	pwms = malloc(len, M_TEMP, M_WAITOK);
@@ -87,6 +87,13 @@ diff -N sys/dev/fdt/pwmbl.c
 +	}
 +
 +	sc->sc_period = pwms[2];
++
++	if (len > 3) {
++		sc->sc_polarity = pwms[3];
++	} else {
++		sc->sc_polarity = PWM_POLARITY_NOT_INVERTED;
++	}
++
 +	free(pwms, M_TEMP, len);
 +
 +	len = OF_getproplen(node, "enable-gpios");
@@ -114,6 +121,7 @@ diff -N sys/dev/fdt/pwmbl.c
 +	pwm_enable(sc->sc_pwm_tag);
 +
 +	config.pc_period = sc->sc_period;
++	config.pc_polarity = sc->sc_polarity;
 +	config.pc_duty_cycle = (config.pc_period * sc->sc_levels[sc->sc_def_level]) / sc->sc_levels[sc->sc_nlevels - 1];
 +	pwm_set_config(sc->sc_pwm_tag, &config);
 +	pwm_get_config(sc->sc_pwm_tag, &config);
@@ -178,6 +186,7 @@ diff -N sys/dev/fdt/pwmbl.c
 +			}
 +
 +			config.pc_period = sc->sc_period;
++			config.pc_polarity = sc->sc_polarity;
 +			config.pc_duty_cycle = (sc->sc_period * sc->sc_levels[i]) / sc->sc_levels[sc->sc_nlevels - 1];
 +			pwm_set_config(sc->sc_pwm_tag, &config);
 +
