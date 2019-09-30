@@ -8,16 +8,16 @@ fi
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 if [ -z "${BRANCH}" ]; then
-   echo BRANCH is unknown
-   exit 1
+    echo BRANCH is unknown
+    exit 1
 fi
 
 cd "$CROSS_OPENBSD_SRC_HOME"
-cvs -qd anoncvs@anoncvs.ca.openbsd.org:/cvs checkout -d ${BRANCH} src
+cvs -qd anoncvs@anoncvs.ca.openbsd.org:/cvs checkout -d "${BRANCH}" "src"
 cd -
 
 if [ -h "src" ]; then
-   rm src
+   rm "src"
 fi
 
-ln -s ${BRANCH} src
+ln -s "${BRANCH}" "src"
