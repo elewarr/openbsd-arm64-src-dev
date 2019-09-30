@@ -5,6 +5,8 @@ echo TARGET is missing
 exit 1
 fi
 
+USER=citan
+
 scp /usr/local/share/u-boot/pinebook/u-boot-sunxi-with-spl.bin "${USER}@${TARGET}:/home/${USER}" && \
 scp ./dest.arm64/usr/obj/sys/arch/arm64/compile/GENERIC.MP/bsd "${USER}@${TARGET}:/home/${USER}" && \
 ssh ${USER}@${TARGET} 'doas cp /home/${USER}/bsd /bsd' && \
