@@ -5,6 +5,19 @@ if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    exit 1
 fi
 
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if [ -z "${BRANCH}" ]; then
+    echo BRANCH is unknown
+    exit 1
+fi
+
+if [ -h "src" ]; then
+    rm "src"
+fi
+
+ln -s "${BRANCH}" "src"
+
 for P in $(find "${CROSS_OPENBSD_SRC_HOME}/patches/" -type f -name "*.patch" -maxdepth 1 | sort); do
     patch -d "${CROSS_OPENBSD_SRC_HOME}/src" < "$P"
     if [ $? -ne 0 ]; then
