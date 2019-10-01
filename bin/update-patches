@@ -7,6 +7,19 @@ fi
 
 rm "${CROSS_OPENBSD_SRC_HOME}/patches/"*.patch
 
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if [ -z "${BRANCH}" ]; then
+    echo BRANCH is unknown
+    exit 1
+fi
+
+if [ -h "src" ]; then
+    rm "src"
+fi
+
+ln -s "${BRANCH}" "src"
+
 cd  "${CROSS_OPENBSD_SRC_HOME}/src"
 for F in $(cvs -q diff --brief | grep 'Index' | awk -F ' ' '{print $2}'); do
     cvs diff $F > "${CROSS_OPENBSD_SRC_HOME}/patches/$(echo ${F} | sed 's/\//_/g').patch"
