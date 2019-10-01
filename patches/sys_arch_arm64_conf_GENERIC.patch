@@ -1,0 +1,15 @@
+Index: sys/arch/arm64/conf/GENERIC
+===================================================================
+RCS file: /cvs/src/sys/arch/arm64/conf/GENERIC,v
+retrieving revision 1.126
+diff -u -p -r1.126 GENERIC
+--- sys/arch/arm64/conf/GENERIC	30 Sep 2019 20:48:15 -0000	1.126
++++ sys/arch/arm64/conf/GENERIC	1 Oct 2019 18:58:45 -0000
+@@ -203,6 +203,7 @@ sdmmc*		at sximmc?	# SD/MMC bus
+ sxisyscon*	at fdt? early 1	# System controller
+ sxitemp*	at fdt?		# Temperature sensor
+ sxitwi*		at fdt?		# I2C controller
++sxiuphy*		at fdt?		# USB Phy
+ iic*		at sxitwi?	# I2C bus
+ dwxe*		at fdt?
+ 
