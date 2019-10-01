@@ -25,5 +25,5 @@ kobjdir="${objdir}/sys/arch/${target}/compile/${kconf}"
 cd "${CROSS_OPENBSD_SRC_HOME}/src"
 eval export $(make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-env)
 config -b "${kobjdir}" -s "${srcdir}/sys" "sys/arch/${target}/conf/${kconf}"
-(cd "${kobjdir}" && make -j ${JOBS})
+(cd "${kobjdir}" && make ${1} -j ${JOBS})
 cd -

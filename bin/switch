@@ -1,0 +1,25 @@
+#!/usr/bin/env ksh
+
+if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
+   echo CROSS_OPENBSD_SRC_HOME is missing
+   exit 1
+fi
+
+cd "${CROSS_OPENBSD_SRC_HOME}"
+git checkout ${1}
+cd -
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if [ -z "${BRANCH}" ]; then
+    echo BRANCH is unknown
+    exit 1
+fi
+
+if [ -h "src" ]; then
+    rm "src"
+fi
+
+ln -s "${BRANCH}" "src"
+
+./bin/build_kernel clean
