@@ -33,6 +33,11 @@ for P in $(find "${CROSS_OPENBSD_SRC_HOME}/patches/" -type f -name "*.patch" -ma
         cvs add "${TARGETD}/${TARGETF}"
         rm "${TARGETD}/${TARGETF}"
         cd -
+    else
+        touch "${CROSS_OPENBSD_SRC_HOME}/src/${TARGETD}/${TARGETF}"
+        cd "${CROSS_OPENBSD_SRC_HOME}/src/"
+        cvs add "${TARGETD}"
+        cd -
     fi
 
     patch -d "${CROSS_OPENBSD_SRC_HOME}/src" < "$P"
