@@ -1,15 +1,26 @@
 Index: sys/arch/arm64/conf/GENERIC
 ===================================================================
 RCS file: /cvs/src/sys/arch/arm64/conf/GENERIC,v
-retrieving revision 1.125
-diff -u -p -r1.125 GENERIC
---- sys/arch/arm64/conf/GENERIC	9 Sep 2019 20:00:27 -0000	1.125
-+++ sys/arch/arm64/conf/GENERIC	29 Sep 2019 19:07:04 -0000
-@@ -199,6 +199,7 @@ sxirtc*		at fdt? early 1	# Real Time Clo
+retrieving revision 1.126
+diff -u -p -r1.126 GENERIC
+--- sys/arch/arm64/conf/GENERIC	30 Sep 2019 20:48:15 -0000	1.126
++++ sys/arch/arm64/conf/GENERIC	1 Oct 2019 07:56:09 -0000
+@@ -105,6 +105,7 @@ option	WSDISPLAY_DEFAULTSCREENS=6	# init
+ 
+ simplefb*	at fdt?
+ wsdisplay*	at simplefb?
++pwmbl*		at pwm?	# PWM backlight
+ 
+ radeondrm*	at pci?
+ drm*		at radeondrm?
+@@ -201,8 +202,10 @@ sxirtc*		at fdt? early 1	# Real Time Clo
  sximmc*		at fdt?		# SD/MMC card controller
  sdmmc*		at sximmc?	# SD/MMC bus
  sxisyscon*	at fdt? early 1	# System controller
 +sxisid*		at fdt? early 1	# SID ROM
  sxitemp*	at fdt?		# Temperature sensor
  sxitwi*		at fdt?		# I2C controller
++sxipwm*		at fdt?		# PWM controller
  iic*		at sxitwi?	# I2C bus
+ dwxe*		at fdt?
+ 
