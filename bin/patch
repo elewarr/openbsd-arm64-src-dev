@@ -5,7 +5,41 @@ if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    exit 1
 fi
 
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if [ -z "${BRANCH}" ]; then
+    echo BRANCH is unknown
+    exit 1
+fi
+
+if [ -h "src" ]; then
+    rm "src"
+fi
+
+ln -s "${BRANCH}" "src"
+
 for P in $(find "${CROSS_OPENBSD_SRC_HOME}/patches/" -type f -name "*.patch" -maxdepth 1 | sort); do
+    TARGETP=$(cat "${P}" | grep "Index: " | cut -d ' ' -f 2)
+    TARGETD=$(dirname "${TARGETP}")
+    TARGETF=$(basename "${TARGETP}")
+    echo ${TARGETD}
+    echo ${TARGETF}
+    if [ ! -d "${CROSS_OPENBSD_SRC_HOME}/src/${TARGETD}" ]; then
+        echo "Making dir: ${TARGETD}"
+        mkdir -p "${CROSS_OPENBSD_SRC_HOME}/src/${TARGETD}"
+        touch "${CROSS_OPENBSD_SRC_HOME}/src/${TARGETD}/${TARGETF}"
+        cd "${CROSS_OPENBSD_SRC_HOME}/src/"
+        cvs add "${TARGETD}"
+        cvs add "${TARGETD}/${TARGETF}"
+        rm "${TARGETD}/${TARGETF}"
+        cd -
+    else
+        touch "${CROSS_OPENBSD_SRC_HOME}/src/${TARGETD}/${TARGETF}"
+        cd "${CROSS_OPENBSD_SRC_HOME}/src/"
+        cvs add "${TARGETD}"
+        cd -
+    fi
+
     patch -d "${CROSS_OPENBSD_SRC_HOME}/src" < "$P"
     if [ $? -ne 0 ]; then
         echo $P failed

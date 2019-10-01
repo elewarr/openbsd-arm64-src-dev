@@ -5,6 +5,10 @@ if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    exit 1
 fi
 
+cd "${CROSS_OPENBSD_SRC_HOME}"
+git checkout ${1}
+cd -
+
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 if [ -z "${BRANCH}" ]; then
@@ -12,12 +16,10 @@ if [ -z "${BRANCH}" ]; then
     exit 1
 fi
 
-cd "$CROSS_OPENBSD_SRC_HOME"
-cvs -qd anoncvs@anoncvs.ca.openbsd.org:/cvs checkout -d "${BRANCH}" "src"
-cd -
-
 if [ -h "src" ]; then
-   rm "src"
+    rm "src"
 fi
 
 ln -s "${BRANCH}" "src"
+
+./bin/build_kernel clean
