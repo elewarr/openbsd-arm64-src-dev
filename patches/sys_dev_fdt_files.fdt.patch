@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/dev/fdt/files.fdt,v
 retrieving revision 1.95
 diff -u -p -r1.95 files.fdt
 --- sys/dev/fdt/files.fdt	30 Sep 2019 20:44:13 -0000	1.95
-+++ sys/dev/fdt/files.fdt	1 Oct 2019 07:56:15 -0000
++++ sys/dev/fdt/files.fdt	1 Oct 2019 19:16:01 -0000
 @@ -36,6 +36,10 @@ device	sxisyscon: fdt
  attach	sxisyscon at fdt
  file	dev/fdt/sxisyscon.c		sxisyscon
@@ -16,10 +16,14 @@ diff -u -p -r1.95 files.fdt
  device	sxitemp
  attach	sxitemp at fdt
  file	dev/fdt/sxitemp.c		sxitemp
-@@ -47,6 +51,15 @@ file	dev/fdt/sxits.c			sxits
+@@ -47,6 +51,19 @@ file	dev/fdt/sxits.c			sxits
  device	sxitwi: i2cbus
  attach	sxitwi at fdt
  file	dev/fdt/sxitwi.c		sxitwi
++
++device	sxiuphy
++attach	sxiuphy at fdt
++file	dev/fdt/sxiuphy.c		sxiuphy
 +
 +define	pwm {}
 +device	sxipwm: pwm

@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/arch/arm64/conf/GENERIC,v
 retrieving revision 1.126
 diff -u -p -r1.126 GENERIC
 --- sys/arch/arm64/conf/GENERIC	30 Sep 2019 20:48:15 -0000	1.126
-+++ sys/arch/arm64/conf/GENERIC	1 Oct 2019 07:56:09 -0000
++++ sys/arch/arm64/conf/GENERIC	1 Oct 2019 19:15:55 -0000
 @@ -105,6 +105,7 @@ option	WSDISPLAY_DEFAULTSCREENS=6	# init
  
  simplefb*	at fdt?
@@ -13,7 +13,7 @@ diff -u -p -r1.126 GENERIC
  
  radeondrm*	at pci?
  drm*		at radeondrm?
-@@ -201,8 +202,10 @@ sxirtc*		at fdt? early 1	# Real Time Clo
+@@ -201,8 +202,11 @@ sxirtc*		at fdt? early 1	# Real Time Clo
  sximmc*		at fdt?		# SD/MMC card controller
  sdmmc*		at sximmc?	# SD/MMC bus
  sxisyscon*	at fdt? early 1	# System controller
@@ -21,6 +21,7 @@ diff -u -p -r1.126 GENERIC
  sxitemp*	at fdt?		# Temperature sensor
  sxitwi*		at fdt?		# I2C controller
 +sxipwm*		at fdt?		# PWM controller
++sxiuphy*	at fdt?		# USB Phy
  iic*		at sxitwi?	# I2C bus
  dwxe*		at fdt?
  
