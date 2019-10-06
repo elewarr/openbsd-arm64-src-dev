@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/dev/fdt/files.fdt,v
 retrieving revision 1.95
 diff -u -p -r1.95 files.fdt
 --- sys/dev/fdt/files.fdt	30 Sep 2019 20:44:13 -0000	1.95
-+++ sys/dev/fdt/files.fdt	1 Oct 2019 19:16:01 -0000
++++ sys/dev/fdt/files.fdt	6 Oct 2019 09:51:27 -0000
 @@ -36,6 +36,10 @@ device	sxisyscon: fdt
  attach	sxisyscon at fdt
  file	dev/fdt/sxisyscon.c		sxisyscon

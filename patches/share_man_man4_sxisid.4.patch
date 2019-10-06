@@ -3,7 +3,7 @@ Index: share/man/man4/sxisid.4
 RCS file: share/man/man4/sxisid.4
 diff -N share/man/man4/sxisid.4
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ share/man/man4/sxisid.4	29 Sep 2019 19:07:01 -0000
++++ share/man/man4/sxisid.4	6 Oct 2019 09:51:18 -0000
 @@ -0,0 +1,45 @@
 +.\"	$OpenBSD$
 +.\"

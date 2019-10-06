@@ -1,10 +1,10 @@
 Index: share/man/man4/Makefile
 ===================================================================
 RCS file: /cvs/src/share/man/man4/Makefile,v
-retrieving revision 1.731
-diff -u -p -r1.731 Makefile
---- share/man/man4/Makefile	26 Sep 2019 13:09:55 -0000	1.731
-+++ share/man/man4/Makefile	29 Sep 2019 19:06:58 -0000
+retrieving revision 1.733
+diff -u -p -r1.733 Makefile
+--- share/man/man4/Makefile	30 Sep 2019 21:00:51 -0000	1.733
++++ share/man/man4/Makefile	6 Oct 2019 09:51:15 -0000
 @@ -70,8 +70,8 @@ MAN=	aac.4 abcrtc.4 ac97.4 acphy.4 acrtc
  	sf.4 sili.4 simplefb.4 siop.4 sis.4 sk.4 sli.4 \
  	sm.4 smsc.4 softraid.4 spdmem.4 sdtemp.4 speaker.4 sppp.4 sqphy.4 \
