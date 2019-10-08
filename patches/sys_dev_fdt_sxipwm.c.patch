@@ -3,9 +3,24 @@ Index: sys/dev/fdt/sxipwm.c
 RCS file: sys/dev/fdt/sxipwm.c
 diff -N sys/dev/fdt/sxipwm.c
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ sys/dev/fdt/sxipwm.c	30 Sep 2019 21:02:34 -0000
-@@ -0,0 +1,323 @@
++++ sys/dev/fdt/sxipwm.c	6 Oct 2019 21:05:13 -0000
+@@ -0,0 +1,250 @@
 +/*	$OpenBSD$	*/
++/*
++ * Copyright (c) 2019 Krystian Lewandowski
++ *
++ * Permission to use, copy, modify, and distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
 +#include <sys/param.h>
 +#include <sys/systm.h>
@@ -15,9 +30,9 @@ diff -N sys/dev/fdt/sxipwm.c
 +#include <machine/fdt.h>
 +#include <machine/bus.h>
 +
-+#include <dev/pwm/pwmvar.h>
 +#include <dev/ofw/openfirm.h>
 +#include <dev/ofw/ofw_clock.h>
++#include <dev/ofw/ofw_misc.h>
 +#include <dev/ofw/ofw_pinctrl.h>
 +#include <dev/ofw/fdt.h>
 +
@@ -26,15 +41,12 @@ diff -N sys/dev/fdt/sxipwm.c
 +#define PWM_CH0_PRESCAL	0xf
 +
 +#define PWM0_RDY		(1 << 28)
-+#define PWM0_BYPASS		(1 << 9)
-+#define PWM_CH0_MODE		(1 << 7)
 +#define SCLK_CH0_GATING	(1 << 6)
 +#define PWM_CH0_ACT_STA	(1 << 5)
 +#define PWM_CH0_EN		(1 << 4)
 +
 +#define PWM_CH0_CYCLES_SHIFT		16
 +#define PWM_CH0_ACT_CYCLES_SHIFT	0
-+#define PWM_CH0_CYCLES_MASK		0xffff
 +#define PWM_CH0_CYCLES_MAX		0xffff
 +
 +#define NS_PER_S		1000000000
@@ -68,21 +80,16 @@ diff -N sys/dev/fdt/sxipwm.c
 +	struct device		sc_dev;
 +	bus_space_tag_t	sc_iot;
 +	bus_space_handle_t	sc_ioh;
-+	int			sc_node;
 +
-+	struct pwm_controller	sc_tag;
-+
-+	uint32_t		sc_freq;
 +	struct sxipwm_prescaler *sc_prescalers;
++	uint32_t		sc_clkin;
++	struct pwm_device	sc_pd;
 +};
 +
 +int	sxipwm_match(struct device *, void *, void *);
 +void	sxipwm_attach(struct device *, struct device *, void *);
-+void	sxipwm_scan(struct sxipwm_softc *);
-+int	sxipwm_enable(void *);
-+int	sxipwm_disable(void *);
-+int	sxipwm_get_config(void *, struct pwm_config *);
-+int	sxipwm_set_config(void *, struct pwm_config *);
++int	sxipwm_get_state(void *, uint32_t *, struct pwm_state *);
++int	sxipwm_set_state(void *, uint32_t *, struct pwm_state *);
 +
 +struct cfattach sxipwm_ca = {
 +	sizeof (struct sxipwm_softc), sxipwm_match, sxipwm_attach
@@ -111,14 +118,13 @@ diff -N sys/dev/fdt/sxipwm.c
 +		return;
 +	}
 +
-+	sc->sc_freq = clock_get_frequency_idx(faa->fa_node, 0);
-+	if (sc->sc_freq == 0) {
++	sc->sc_clkin = clock_get_frequency_idx(faa->fa_node, 0);
++	if (sc->sc_clkin == 0) {
 +		printf(": no clock\n");
 +		return;
 +	}
 +
 +	sc->sc_iot = faa->fa_iot;
-+	sc->sc_node = faa->fa_node;
 +	if (bus_space_map(sc->sc_iot, faa->fa_reg[0].addr,
 +	    faa->fa_reg[0].size, 0, &sc->sc_ioh)) {
 +		printf(": can't map registers\n");
@@ -127,118 +133,38 @@ diff -N sys/dev/fdt/sxipwm.c
 +
 +	printf("\n");
 +
-+	pinctrl_byname(sc->sc_node, "default");
++	pinctrl_byname(faa->fa_node, "default");
 +
-+	clock_enable_all(sc->sc_node);
-+	reset_deassert_all(sc->sc_node);
++	clock_enable_all(faa->fa_node);
++	reset_deassert_all(faa->fa_node);
 +
 +	if (OF_is_compatible(faa->fa_node, "allwinner,sun50i-a64-pwm")) {
 +		sc->sc_prescalers = a64_prescalers;
 +	}
 +
-+	if (sc->sc_prescalers == NULL) {
-+		return;
-+	}
-+
-+	sxipwm_enable(sc);
-+
-+	sc->sc_tag.pc_cookie = sc;
-+	sc->sc_tag.pc_enable = sxipwm_enable;
-+	sc->sc_tag.pc_disable = sxipwm_disable;
-+	sc->sc_tag.pc_set_config = sxipwm_set_config;
-+	sc->sc_tag.pc_get_config = sxipwm_get_config;
-+
-+	sxipwm_scan(sc);
-+}
-+
-+void
-+sxipwm_scan(struct sxipwm_softc *sc)
-+{
-+	struct pwm_attach_args pa;
-+	char name[32];
-+	int len, pwm_node, node = OF_finddevice("/");
-+	uint32_t *pwms;
-+
-+	if (node == 0)
++	if (sc->sc_prescalers == NULL)
 +		return;
 +
-+	for (node = OF_child(node); node; node = OF_peer(node)) {
-+		memset(name, 0, sizeof(name));
++	sc->sc_pd.pd_node = faa->fa_node;
++	sc->sc_pd.pd_cookie = sc;
++	sc->sc_pd.pd_get_state = sxipwm_get_state;
++	sc->sc_pd.pd_set_state = sxipwm_set_state;
 +
-+		if (OF_getprop(node, "compatible", name, sizeof(name)) == -1)
-+			continue;
-+
-+		if (name[0] == '\0')
-+			continue;
-+
-+		len = OF_getproplen(node, "pwms");
-+		if (len < 0)
-+			continue;
-+
-+		pwms = malloc(len, M_TEMP, M_WAITOK);
-+		OF_getpropintarray(node, "pwms", pwms, len);
-+		pwm_node = OF_getnodebyphandle(pwms[0]);
-+		free(pwms, M_TEMP, len);
-+
-+		if (sc->sc_node != pwm_node)
-+			continue;
-+
-+		memset(&pa, 0, sizeof(pa));
-+		pa.pa_tag = &sc->sc_tag;
-+		pa.pa_name = name;
-+		pa.pa_cookie = &node;
-+		pa.pa_channel = 0;
-+
-+		config_found(&sc->sc_dev, &pa, NULL);
-+	}
++	pwm_register(&sc->sc_pd);
 +}
 +
 +int
-+sxipwm_enable_arg(void *arg, int enable)
++sxipwm_get_state(void *cookie, uint32_t *cells, struct pwm_state *ps)
 +{
-+	struct sxipwm_softc *sc = arg;
-+	uint32_t ctrl_reg;
-+
-+	ctrl_reg = HREAD4(sc, PWM_CTRL_REG);
-+
-+	if (ctrl_reg & PWM0_RDY) {
-+		return EBUSY;
-+	}
-+
-+	if (enable) {
-+		ctrl_reg &= ~PWM0_BYPASS;
-+		ctrl_reg &= ~PWM_CH0_MODE;
-+		ctrl_reg |= (PWM_CH0_EN | SCLK_CH0_GATING);
-+	} else {
-+		ctrl_reg &= ~(PWM_CH0_EN | SCLK_CH0_GATING);
-+	}
-+
-+	HWRITE4(sc, PWM_CTRL_REG, ctrl_reg);
-+
-+	return 0;
-+}
-+
-+int
-+sxipwm_enable(void *arg)
-+{
-+	return sxipwm_enable_arg(arg, 1);
-+}
-+
-+int
-+sxipwm_disable(void *arg)
-+{
-+
-+	return sxipwm_enable_arg(arg, 0);
-+}
-+
-+int
-+sxipwm_get_config(void *arg, struct pwm_config *config)
-+{
-+	struct sxipwm_softc *sc = arg;
++	struct sxipwm_softc *sc = cookie;
++	uint32_t idx = cells[0];
 +	uint32_t ctrl_reg, ch_period_reg;
 +	uint16_t cycles, act_cycles;
-+	uint64_t rate;
++	uint32_t rate;
 +	int i, prescaler;
++
++	if (idx != 0)
++		return EINVAL;
 +
 +	ctrl_reg = HREAD4(sc, PWM_CTRL_REG);
 +	ch_period_reg = HREAD4(sc, PWM_CH0_PERIOD);
@@ -250,81 +176,82 @@ diff -N sys/dev/fdt/sxipwm.c
 +		}
 +	}
 +
-+	if (prescaler < 0) {
++	if (prescaler < 0)
 +		return EINVAL;
-+	}
 +
-+	rate = sc->sc_freq / sc->sc_prescalers[prescaler].divider;
-+	cycles = ((ch_period_reg >> PWM_CH0_CYCLES_SHIFT) + 1 ) & PWM_CH0_CYCLES_MASK;
-+	act_cycles = (ch_period_reg >> PWM_CH0_ACT_CYCLES_SHIFT) & PWM_CH0_CYCLES_MASK;
++	rate = sc->sc_clkin / sc->sc_prescalers[prescaler].divider;
++	cycles = ((ch_period_reg >> PWM_CH0_CYCLES_SHIFT) + 1 ) & PWM_CH0_CYCLES_MAX;
++	act_cycles = (ch_period_reg >> PWM_CH0_ACT_CYCLES_SHIFT) & PWM_CH0_CYCLES_MAX;
 +
-+	config->pc_period = NS_PER_S / (rate / cycles);
-+	config->pc_duty_cycle = NS_PER_S / (rate / act_cycles);
++	memset(ps, 0, sizeof(struct pwm_state));
++	ps->ps_period = NS_PER_S / (rate / cycles);
++	ps->ps_pulse_width = NS_PER_S / (rate / act_cycles);
++	ps->ps_enabled = (ctrl_reg & (PWM_CH0_EN | SCLK_CH0_GATING)) == (PWM_CH0_EN | SCLK_CH0_GATING);
 +
 +	return 0;
 +}
 +
 +int
-+sxipwm_set_config(void *arg, struct pwm_config *config)
++sxipwm_set_state(void *cookie, uint32_t *cells, struct pwm_state *ps)
 +{
-+	struct sxipwm_softc *sc = arg;
-+	uint16_t period = config->pc_period;
-+	uint16_t duty_cycle = config->pc_duty_cycle;
-+	uint32_t ctrl_reg, ch_period_reg;
++	struct sxipwm_softc *sc = cookie;
++	uint32_t idx = cells[0];
++	uint32_t reg, period_freq, duty_freq, rate;
 +	uint16_t cycles, act_cycles;
-+	uint64_t period_freq, duty_freq, rate;
 +	int i, prescaler;
 +
-+	period_freq = NS_PER_S / period;
++	period_freq = NS_PER_S / ps->ps_period;
++	duty_freq = NS_PER_S / (ps->ps_pulse_width ? ps->ps_pulse_width : 1);
 +
-+	duty_cycle = duty_cycle ? duty_cycle : 1;
-+
-+	duty_freq = NS_PER_S / duty_cycle;
-+
-+	if (period_freq > sc->sc_freq) {
++	if (idx != 0)
 +		return EINVAL;
-+	}
 +
-+	if (duty_freq < period_freq) {
++	if (period_freq > sc->sc_clkin)
 +		return EINVAL;
-+	}
++
++	if (duty_freq < period_freq)
++		return EINVAL;
 +
 +	prescaler = -1;
 +	for (i = 0; sc->sc_prescalers[i].divider; i++) {
-+		rate = sc->sc_freq / (period_freq * sc->sc_prescalers[i].divider);
++		rate = sc->sc_clkin / (period_freq * sc->sc_prescalers[i].divider);
 +		if ((rate - 1) < PWM_CH0_CYCLES_MAX) {
 +			prescaler = i;
 +			break;
 +		}
 +	}
 +
-+	if (prescaler < 0) {
++	if (prescaler < 0)
 +		return EINVAL;
-+	}
 +
-+	ctrl_reg = HREAD4(sc, PWM_CTRL_REG);
++	reg = HREAD4(sc, PWM_CTRL_REG);
 +
-+	if (ctrl_reg & PWM0_RDY) {
++	if (reg & PWM0_RDY)
 +		return EBUSY;
-+	}
 +
-+	if (config->pc_polarity == PWM_POLARITY_INVERTED) {
-+		ctrl_reg &= ~PWM_CH0_ACT_STA;
++	if (ps->ps_enabled) {
++		reg |= (PWM_CH0_EN | SCLK_CH0_GATING);
 +	} else {
-+		ctrl_reg |= PWM_CH0_ACT_STA;
++		reg &= ~(PWM_CH0_EN | SCLK_CH0_GATING);
 +	}
 +
-+	ctrl_reg &= ~PWM_CH0_PRESCAL;
-+	ctrl_reg |= sc->sc_prescalers[prescaler].mask;
-+	HWRITE4(sc, PWM_CTRL_REG, ctrl_reg);
++	if (ps->ps_flags & PWM_POLARITY_INVERTED) {
++		reg &= ~PWM_CH0_ACT_STA;
++	} else {
++		reg |= PWM_CH0_ACT_STA;
++	}
 +
-+	rate = sc->sc_freq / sc->sc_prescalers[prescaler].divider;
++	reg &= ~PWM_CH0_PRESCAL;
++	reg |= sc->sc_prescalers[prescaler].mask;
++	HWRITE4(sc, PWM_CTRL_REG, reg);
++
++	rate = sc->sc_clkin / sc->sc_prescalers[prescaler].divider;
 +	cycles = rate / period_freq;
 +	act_cycles = rate / duty_freq;
 +
-+	ch_period_reg = ((cycles - 1) << PWM_CH0_CYCLES_SHIFT) |
++	reg = ((cycles - 1) << PWM_CH0_CYCLES_SHIFT) |
 +	    (act_cycles << PWM_CH0_ACT_CYCLES_SHIFT);
-+	HWRITE4(sc, PWM_CH0_PERIOD, ch_period_reg);
++	HWRITE4(sc, PWM_CH0_PERIOD, reg);
 +
 +	return 0;
 +}
