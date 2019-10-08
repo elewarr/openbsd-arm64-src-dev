@@ -3,9 +3,24 @@ Index: sys/dev/fdt/pwmbl.c
 RCS file: sys/dev/fdt/pwmbl.c
 diff -N sys/dev/fdt/pwmbl.c
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ sys/dev/fdt/pwmbl.c	6 Oct 2019 09:51:29 -0000
-@@ -0,0 +1,194 @@
++++ sys/dev/fdt/pwmbl.c	6 Oct 2019 21:05:07 -0000
+@@ -0,0 +1,219 @@
 +/*	$OpenBSD$	*/
++/*
++ * Copyright (c) 2019 Krystian Lewandowski
++ *
++ * Permission to use, copy, modify, and distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
 +#include <sys/param.h>
 +#include <sys/systm.h>
@@ -15,21 +30,20 @@ diff -N sys/dev/fdt/pwmbl.c
 +#include <machine/fdt.h>
 +#include <machine/bus.h>
 +
-+#include <dev/pwm/pwmvar.h>
 +#include <dev/ofw/openfirm.h>
 +#include <dev/ofw/ofw_gpio.h>
++#include <dev/ofw/ofw_misc.h>
 +
 +#include <dev/wscons/wsconsio.h>
 +
 +struct pwmbl_softc {
 +	struct device		sc_dev;
-+	uint64_t		sc_period;
-+	uint8_t		sc_polarity;
-+	uint8_t		sc_nlevels;
++	uint32_t		*sc_pwm;
++	uint32_t		sc_period;
++	uint32_t		sc_flags;
++	uint32_t		sc_nlevels;
 +	uint32_t		*sc_levels;
 +	uint32_t		sc_def_level;
-+
-+	pwm_tag_t		sc_pwm_tag;
 +};
 +
 +extern int			(*simplefb_read_cmd)(u_long, caddr_t);
@@ -38,6 +52,9 @@ diff -N sys/dev/fdt/pwmbl.c
 +struct pwmbl_softc *sc_pwmbl;
 +int	pwmbl_match(struct device *, void *, void *);
 +void	pwmbl_attach(struct device *, struct device *, void *);
++int	pwmbl_get_brightness(void *, uint32_t *);
++int	pwmbl_set_brightness(void *, uint32_t);
++
 +int	pwmbl_simplefb_read_cmd(ulong, caddr_t);
 +int	pwmbl_simplefb_write_cmd(ulong, caddr_t);
 +
@@ -49,95 +66,117 @@ diff -N sys/dev/fdt/pwmbl.c
 +	NULL, "pwmbl", DV_DULL
 +};
 +
-+
 +int
 +pwmbl_match(struct device *parent, void *match, void *aux)
 +{
-+	struct pwm_attach_args *pa = aux;
++	struct fdt_attach_args *faa = aux;
 +
-+	if (strcmp(pa->pa_name, "pwm-backlight") == 0)
-+		return 1;
-+
-+	return 0;
++	return OF_is_compatible(faa->fa_node, "pwm-backlight");
 +}
 +
 +void
 +pwmbl_attach(struct device *parent, struct device *self, void *aux)
 +{
 +	struct pwmbl_softc *sc = (struct pwmbl_softc *)self;
-+	struct pwm_attach_args *pa = aux;
-+	struct pwm_config config;
-+	uint32_t *pwms, *gpios;
-+	int len, node;
++	struct fdt_attach_args *faa = aux;
 +
-+	sc->sc_pwm_tag = pa->pa_tag;
++	uint32_t *gpios;
++	int len;
 +
-+	node = *(int *) pa->pa_cookie;
-+
-+	len = OF_getproplen(node, "pwms");
-+	if (len < 3)
-+		return;
-+
-+	pwms = malloc(len, M_TEMP, M_WAITOK);
-+	OF_getpropintarray(node, "pwms", pwms, len);
-+
-+	if (pwms[1] != pa->pa_channel) {
-+		free(pwms, M_TEMP, len);
++	len = OF_getproplen(faa->fa_node, "pwms");
++	if (len <= 12) {
++		printf(": no pwm\n");
 +		return;
 +	}
 +
-+	sc->sc_period = pwms[2];
++	sc->sc_pwm = malloc(len, M_DEVBUF, M_WAITOK);
++	OF_getpropintarray(faa->fa_node, "pwms", sc->sc_pwm, len);
 +
-+	if (len > 3) {
-+		sc->sc_polarity = pwms[3];
++	sc->sc_period = sc->sc_pwm[2];
++	if(len >= 16) {
++		sc->sc_flags = sc->sc_pwm[3];
 +	} else {
-+		sc->sc_polarity = PWM_POLARITY_NOT_INVERTED;
++		sc->sc_flags = 0;
 +	}
 +
-+	free(pwms, M_TEMP, len);
-+
-+	len = OF_getproplen(node, "enable-gpios");
-+	if (len < 0)
++	len = OF_getproplen(faa->fa_node, "enable-gpios");
++	if (len < 0) {
++		printf(": no gpio\n");
 +		return;
++	}
 +
 +	gpios = malloc(len, M_TEMP, M_WAITOK);
-+	OF_getpropintarray(node, "enable-gpios", gpios, len);
++	OF_getpropintarray(faa->fa_node, "enable-gpios", gpios, len);
 +	gpio_controller_config_pin(&gpios[0], GPIO_CONFIG_OUTPUT);
 +	gpio_controller_set_pin(&gpios[0], 1);
 +	free(gpios, M_TEMP, len);
 +
-+	len = OF_getproplen(node, "brightness-levels");
-+	if (len < 0)
++	len = OF_getproplen(faa->fa_node, "brightness-levels");
++	if (len < 0) {
++		printf(": no brightness levels\n");
 +		return;
++	}
++
++	printf("\n");
 +
 +	sc->sc_levels = malloc(len, M_DEVBUF, M_WAITOK);
-+	OF_getpropintarray(node, "brightness-levels",
++	OF_getpropintarray(faa->fa_node, "brightness-levels",
 +	    sc->sc_levels, len);
-+	sc->sc_nlevels = len/sizeof(uint32_t);
++	sc->sc_nlevels = len / sizeof(uint32_t);
 +
-+	sc->sc_def_level = OF_getpropint(node, "default-brightness-level",
++	sc->sc_def_level = OF_getpropint(faa->fa_node, "default-brightness-level",
 +	    sc->sc_levels[sc->sc_nlevels-1]);
 +
-+	pwm_enable(sc->sc_pwm_tag);
-+
-+	config.pc_period = sc->sc_period;
-+	config.pc_polarity = sc->sc_polarity;
-+	config.pc_duty_cycle = (config.pc_period * sc->sc_levels[sc->sc_def_level]) / sc->sc_levels[sc->sc_nlevels - 1];
-+	pwm_set_config(sc->sc_pwm_tag, &config);
-+	pwm_get_config(sc->sc_pwm_tag, &config);
-+
++	// TODO: let simplefb to manage brightness via pwmbl
 +	sc_pwmbl = sc;
 +	simplefb_read_cmd = pwmbl_simplefb_read_cmd;
 +	simplefb_write_cmd = pwmbl_simplefb_write_cmd;
 +}
 +
 +int
++pwmbl_get_brightness(void *cookie, uint32_t *level) {
++	struct pwmbl_softc *sc = cookie;
++	struct pwm_state ps;
++	uint32_t bl_val;
++	int i;
++
++	if (pwm_get_state(sc->sc_pwm, &ps))
++		return EINVAL;
++
++	bl_val = (ps.ps_pulse_width * sc->sc_levels[sc->sc_nlevels - 1]) / sc->sc_period;
++
++	for (i = 0; i < sc->sc_nlevels; i++) {
++		if (bl_val <= sc->sc_levels[i]) {
++			*level = i;
++			break;
++		}
++	}
++
++	return 0;
++}
++
++int
++pwmbl_set_brightness(void *cookie, uint32_t level) {
++	struct pwmbl_softc *sc = cookie;
++	struct pwm_state ps;
++
++	if (pwm_init_state(sc->sc_pwm, &ps))
++		return EINVAL;
++
++	ps.ps_period = sc->sc_period;
++	ps.ps_flags = sc->sc_flags;
++	ps.ps_enabled = 1;
++	ps.ps_pulse_width = (sc->sc_period * sc->sc_levels[level]) / sc->sc_levels[sc->sc_nlevels - 1];
++	return pwm_set_state(sc->sc_pwm, &ps);
++}
++
++// TODO: find a better way for simplefb to manage brightness via pwmbl
++int
 +pwmbl_simplefb_read_cmd(ulong cmd, caddr_t data)
 +{
 +	struct wsdisplay_param *dp = (struct wsdisplay_param *)data;
 +	struct pwmbl_softc *sc = (struct pwmbl_softc *)sc_pwmbl;
-+	struct pwm_config config;
-+	int i, bl_val;
++	uint32_t level;
 +
 +	switch (cmd) {
 +	case WSDISPLAYIO_GETPARAM:
@@ -146,17 +185,10 @@ diff -N sys/dev/fdt/pwmbl.c
 +			dp->min = sc->sc_levels[0];
 +			dp->max = sc->sc_levels[sc->sc_nlevels - 1];
 +
-+			pwm_get_config(sc->sc_pwm_tag, &config);
-+			bl_val = (config.pc_duty_cycle * sc->sc_levels[sc->sc_nlevels - 1]) / sc->sc_period;
-+
-+			for (i = 0; i < sc->sc_nlevels; i++) {
-+				if (bl_val <= sc->sc_levels[i])
-+					break;
++			if (pwmbl_get_brightness(sc, &level) >= 0) {
++				dp->curval = sc->sc_levels[level];
++				return 0;
 +			}
-+
-+			dp->curval = sc->sc_levels[i];
-+
-+			return 0;
 +			break;
 +		}
 +		break;
@@ -171,26 +203,19 @@ diff -N sys/dev/fdt/pwmbl.c
 +{
 +	struct wsdisplay_param *dp = (struct wsdisplay_param *)data;
 +	struct pwmbl_softc *sc = (struct pwmbl_softc *)sc_pwmbl;
-+	struct pwm_config config;
 +	u_int i;
 +
 +	switch (cmd) {
 +	case WSDISPLAYIO_SETPARAM:
 +		switch (dp->param) {
 +		case WSDISPLAYIO_PARAM_BRIGHTNESS:
-+			pwm_get_config(sc->sc_pwm_tag, &config);
-+
 +			for (i = 0; i < sc->sc_nlevels; i++) {
 +				if (dp->curval <= sc->sc_levels[i])
 +					break;
 +			}
 +
-+			config.pc_period = sc->sc_period;
-+			config.pc_polarity = sc->sc_polarity;
-+			config.pc_duty_cycle = (sc->sc_period * sc->sc_levels[i]) / sc->sc_levels[sc->sc_nlevels - 1];
-+			pwm_set_config(sc->sc_pwm_tag, &config);
-+
-+			return 0;
++			if (pwmbl_set_brightness(sc, i) >= 0)
++				return 0;
 +			break;
 +		}
 +		break;
