@@ -3,7 +3,7 @@ Index: sys/dev/fdt/sxipwm.c
 RCS file: sys/dev/fdt/sxipwm.c
 diff -N sys/dev/fdt/sxipwm.c
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ sys/dev/fdt/sxipwm.c	6 Oct 2019 21:05:13 -0000
++++ sys/dev/fdt/sxipwm.c	8 Oct 2019 21:21:47 -0000
 @@ -0,0 +1,250 @@
 +/*	$OpenBSD$	*/
 +/*
