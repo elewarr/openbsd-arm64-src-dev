@@ -3,8 +3,53 @@ Index: share/man/man4/sxisid.4
 RCS file: share/man/man4/sxisid.4
 diff -N share/man/man4/sxisid.4
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ share/man/man4/sxisid.4	8 Oct 2019 21:21:30 -0000
-@@ -0,0 +1,45 @@
++++ share/man/man4/sxisid.4	23 Oct 2019 01:44:21 -0000
+@@ -0,0 +1,90 @@
++.\"	$OpenBSD$
++.\"
++.\" Copyright (c) 2019 Krystian Lewandowski
++.\"
++.\" Permission to use, copy, modify, and distribute this software for any
++.\" purpose with or without fee is hereby granted, provided that the above
++.\" copyright notice and this permission notice appear in all copies.
++.\"
++.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++.\"
++.Dd $Mdocdate: September 29 2019 $
++.Dt SXISID 4
++.Os
++.Sh NAME
++.Nm sxisid
++.Nd Allwinner e-fuses interface (read only)
++.Sh SYNOPSIS
++.Cd "sxisid* at fdt? early 1"
++.Sh DESCRIPTION
++The
++.Nm
++driver provides support for the e-fuse registers integrated in Allwinner
++Technology A-series. For now only A64 is tested and supported.
++The
++.Xr sxitemp 4
++driver performs calibration using this interface.
++.Pp
++Chip ID (SID) is available through the
++.Xr sysctl 8
++interface.
++.Sh SEE ALSO
++.Xr intro 4 ,
++.Xr sxitemp 4 ,
++.Xr sysctl 8
++.Sh HISTORY
++The
++.Nm
++driver first appeared in
++.Ox 6.6 .
 +.\"	$OpenBSD$
 +.\"
 +.\" Copyright (c) 2019 Krystian Lewandowski

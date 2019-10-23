@@ -1,11 +1,11 @@
 Index: sys/dev/fdt/files.fdt
 ===================================================================
 RCS file: /cvs/src/sys/dev/fdt/files.fdt,v
-retrieving revision 1.98
-diff -u -p -r1.98 files.fdt
---- sys/dev/fdt/files.fdt	7 Oct 2019 19:35:07 -0000	1.98
-+++ sys/dev/fdt/files.fdt	8 Oct 2019 21:21:39 -0000
-@@ -36,6 +36,10 @@ device	sxisyscon: fdt
+retrieving revision 1.101
+diff -u -p -r1.101 files.fdt
+--- sys/dev/fdt/files.fdt	21 Oct 2019 20:52:33 -0000	1.101
++++ sys/dev/fdt/files.fdt	23 Oct 2019 01:44:29 -0000
+@@ -44,6 +44,10 @@ device	sxisyscon: fdt
  attach	sxisyscon at fdt
  file	dev/fdt/sxisyscon.c		sxisyscon
  
@@ -16,7 +16,7 @@ diff -u -p -r1.98 files.fdt
  device	sxitemp
  attach	sxitemp at fdt
  file	dev/fdt/sxitemp.c		sxitemp
-@@ -47,6 +51,18 @@ file	dev/fdt/sxits.c			sxits
+@@ -55,6 +59,10 @@ file	dev/fdt/sxits.c			sxits
  device	sxitwi: i2cbus
  attach	sxitwi at fdt
  file	dev/fdt/sxitwi.c		sxitwi
@@ -24,14 +24,6 @@ diff -u -p -r1.98 files.fdt
 +device	sxiuphy
 +attach	sxiuphy at fdt
 +file	dev/fdt/sxiuphy.c		sxiuphy
-+
-+device	sxipwm
-+attach	sxipwm at fdt
-+file	dev/fdt/sxipwm.c		sxipwm
-+
-+device	pwmbl
-+attach	pwmbl at fdt
-+file	dev/fdt/pwmbl.c		pwmbl
  
  device	axppmic
  attach	axppmic at i2c
