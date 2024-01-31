@@ -1,4 +1,6 @@
 #!/usr/bin/env ksh
+set -e
+set -o xtrace
 
 if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    echo CROSS_OPENBSD_SRC_HOME is missing
@@ -12,8 +14,13 @@ if [ -z "${BRANCH}" ]; then
     exit 1
 fi
 
+if [ -z "${CVSROOT}" ]; then
+    echo CVSROOT is unknown
+    exit 1
+fi
+
 cd "$CROSS_OPENBSD_SRC_HOME"
-cvs -qd anoncvs@anoncvs.ca.openbsd.org:/cvs checkout -d "${BRANCH}" "src"
+cvs checkout -d "${BRANCH}" "src"
 cd -
 
 if [ -h "src" ]; then

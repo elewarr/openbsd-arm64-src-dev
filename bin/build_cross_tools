@@ -1,4 +1,6 @@
 #!/usr/bin/env ksh
+set -e
+set -o xtrace
 
 if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    echo CROSS_OPENBSD_SRC_HOME is missing
@@ -33,12 +35,12 @@ fi
 ln -s "${BRANCH}" "src"
 
 cd "${CROSS_OPENBSD_SRC_HOME}/src"
-make clean && \
-    make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-dirs -j${JOBS} && \
-    make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-tools -j ${JOBS} && \
-    make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-distrib -j ${JOBS}
+doas make clean && \
+    doas make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-dirs -j${JOBS} && \
+    doas make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-tools -j ${JOBS} && \
+    doas make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-distrib -j ${JOBS}
 cd -
 
-chown -R ${USER}:wobj "${destdir}"
+doas chown -R ${USER}:wobj "${destdir}"
 ln -s "${destdir}/usr/obj" "${objdir}"
 ln -s "${destdir}/usr/${toolstarget}-openbsd$(uname -r)" "${toolsdir}"

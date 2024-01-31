@@ -34,7 +34,7 @@ With u-boot from this repository: https://github.com/elewarr/openbsd-ports-u-boo
 1. `cd openbsd-arm64-src-dev`
 1. `. ./env`
 1. `./bin/checkout`
-1. `doas ./bin/build_cross_tools`
+1. `./bin/build_cross_tools`
 
 #### Apply patches
 1. `./bin/patch`
@@ -47,4 +47,4 @@ With u-boot from this repository: https://github.com/elewarr/openbsd-ports-u-boo
 1. `./bin/deploy`
 
 #### Generate new patches - one per file (*will overwrite existing ones*)
-1. `./bin/make-patches`
+1. `./bin/update-patches`
