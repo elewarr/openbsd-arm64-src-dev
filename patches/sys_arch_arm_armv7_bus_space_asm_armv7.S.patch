@@ -1,0 +1,192 @@
+Index: sys/arch/arm/armv7/bus_space_asm_armv7.S
+===================================================================
+RCS file: /cvs/src/sys/arch/arm/armv7/bus_space_asm_armv7.S,v
+retrieving revision 1.5
+diff -u -p -r1.5 bus_space_asm_armv7.S
+--- sys/arch/arm/armv7/bus_space_asm_armv7.S	22 Mar 2016 23:35:01 -0000	1.5
++++ sys/arch/arm/armv7/bus_space_asm_armv7.S	2 Feb 2024 22:34:16 -0000
+@@ -47,17 +47,17 @@
+  */
+ 
+ ENTRY(armv7_bs_r_1)
+-	dsb	sy
++//	dsb	sy
+ 	ldrb	r0, [r1, r2]
+ 	mov	pc, lr
+ 
+ ENTRY(armv7_bs_r_2)
+-	dsb	sy
++//	dsb	sy
+ 	ldrh	r0, [r1, r2]
+ 	mov	pc, lr
+ 
+ ENTRY(armv7_bs_r_4)
+-	dsb	sy
++//	dsb	sy
+ 	ldr	r0, [r1, r2]
+ 	mov	pc, lr
+ 
+@@ -67,17 +67,17 @@ ENTRY(armv7_bs_r_4)
+ 
+ ENTRY(armv7_bs_w_1)
+ 	strb	r3, [r1, r2]
+-	dsb	sy
++//	dsb	sy
+ 	mov	pc, lr
+ 
+ ENTRY(armv7_bs_w_2)
+ 	strh	r3, [r1, r2]
+-	dsb	sy
++//	dsb	sy
+ 	mov	pc, lr
+ 
+ ENTRY(armv7_bs_w_4)
+ 	str	r3, [r1, r2]
+-	dsb	sy
++//	dsb	sy
+ 	mov	pc, lr
+ 
+ /*
+@@ -95,7 +95,7 @@ ENTRY(armv7_bs_rm_1)
+ 	strb	r3, [r1], #1
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -110,7 +110,7 @@ ENTRY(armv7_bs_rm_2)
+ 	strh	r3, [r1], #2
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -125,7 +125,7 @@ ENTRY(armv7_bs_rm_4)
+ 	str	r3, [r1], #4
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -144,7 +144,7 @@ ENTRY(armv7_bs_wm_1)
+ 	strb	r3, [r0]
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -159,7 +159,7 @@ ENTRY(armv7_bs_wm_2)
+ 	strh	r3, [r0]
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -174,7 +174,7 @@ ENTRY(armv7_bs_wm_4)
+ 	str	r3, [r0]
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -193,7 +193,7 @@ ENTRY(armv7_bs_rr_1)
+ 	strb	r3, [r1], #1
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -208,7 +208,7 @@ ENTRY(armv7_bs_rr_2)
+ 	strh	r3, [r1], #2
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -241,7 +241,7 @@ ENTRY(armv7_bs_wr_1)
+ 	strb	r3, [r0], #1
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -256,7 +256,7 @@ ENTRY(armv7_bs_wr_2)
+ 	strh	r3, [r0], #2
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -271,7 +271,7 @@ ENTRY(armv7_bs_wr_4)
+ 	str	r3, [r0], #4
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -289,7 +289,7 @@ ENTRY(armv7_bs_sr_1)
+ 1:	strb	r1, [r0], #1
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -303,7 +303,7 @@ ENTRY(armv7_bs_sr_2)
+ 1:	strh	r1, [r0], #2
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -317,7 +317,7 @@ ENTRY(armv7_bs_sr_4)
+ 1:	str	r1, [r0], #4
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -340,7 +340,7 @@ ENTRY(armv7_bs_c_2)
+ 	strh	r3, [r1], #2
+ 	subs	r2, r2, #1
+ 	bne	1b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr
+ 
+@@ -353,6 +353,6 @@ ENTRY(armv7_bs_c_2)
+ 	strh	r3, [r1], #-2
+ 	subs	r2, r2, #1
+ 	bne	3b
+-	dsb	sy
++//	dsb	sy
+ 
+ 	mov	pc, lr

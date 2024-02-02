@@ -1,0 +1,16 @@
+Index: usr.sbin/fw_update/Makefile
+===================================================================
+RCS file: /cvs/src/usr.sbin/fw_update/Makefile,v
+retrieving revision 1.5
+diff -u -p -r1.5 Makefile
+--- usr.sbin/fw_update/Makefile	6 Jan 2022 13:18:36 -0000	1.5
++++ usr.sbin/fw_update/Makefile	2 Feb 2024 22:35:01 -0000
+@@ -3,7 +3,7 @@
+ PROG=	patterns
+ MAN=	fw_update.8
+ CC=	${HOSTCC}
+-CFLAGS+=-I ${.CURDIR}/../../sys/dev/pci/drm/amd/amdgpu \
++CFLAGS:=-I ${.CURDIR}/../../sys/dev/pci/drm/amd/amdgpu \
+ 	-I ${.CURDIR}/../../sys/dev/pci/drm/i915 \
+ 	-I ${.CURDIR}/../../sys/dev/pci/drm/radeon
+ 

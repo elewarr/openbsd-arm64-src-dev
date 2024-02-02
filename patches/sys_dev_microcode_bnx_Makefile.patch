@@ -1,0 +1,15 @@
+Index: sys/dev/microcode/bnx/Makefile
+===================================================================
+RCS file: /cvs/src/sys/dev/microcode/bnx/Makefile,v
+retrieving revision 1.7
+diff -u -p -r1.7 Makefile
+--- sys/dev/microcode/bnx/Makefile	3 Oct 2021 00:48:45 -0000	1.7
++++ sys/dev/microcode/bnx/Makefile	2 Feb 2024 22:34:34 -0000
+@@ -3,6 +3,7 @@
+ NOPROG=
+ NOMAN=
+ CC=${HOSTCC}
++CFLAGS:=
+ 
+ FIRM=	bnx-b06 bnx-b09 bnx-rv2p bnx-xi-rv2p bnx-xi90-rv2p
+ 

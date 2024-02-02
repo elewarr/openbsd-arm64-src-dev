@@ -1,0 +1,15 @@
+Index: sys/dev/microcode/zydas/Makefile
+===================================================================
+RCS file: /cvs/src/sys/dev/microcode/zydas/Makefile,v
+retrieving revision 1.18
+diff -u -p -r1.18 Makefile
+--- sys/dev/microcode/zydas/Makefile	3 Oct 2021 00:48:46 -0000	1.18
++++ sys/dev/microcode/zydas/Makefile	2 Feb 2024 22:34:58 -0000
+@@ -3,6 +3,7 @@
+ NOPROG=
+ NOMAN=
+ CC=${HOSTCC}
++CFLAGS:=
+ 
+ FIRM=	zd1211 zd1211b
+ 

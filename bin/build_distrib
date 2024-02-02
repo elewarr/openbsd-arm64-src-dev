@@ -12,7 +12,7 @@ fi
 . "$(dirname $(readlink -f $0))/.cross_env"
 
 cd "${CROSS_OPENBSD_SRC_HOME}/src"
-eval export $(make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-env)
-rm ${destdir}/usr/obj/sys/arch/armv7/stand/efiboot/* || true
-(cd sys/arch/${target}/stand/efiboot/ && make clean && make all)
+    doas make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-distrib -j ${JOBS}
 cd -
+
+doas chown -R ${USER}:wobj "${destdir}"

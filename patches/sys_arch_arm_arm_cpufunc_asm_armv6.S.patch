@@ -1,0 +1,99 @@
+Index: sys/arch/arm/arm/cpufunc_asm_armv6.S
+===================================================================
+RCS file: sys/arch/arm/arm/cpufunc_asm_armv6.S
+diff -N sys/arch/arm/arm/cpufunc_asm_armv6.S
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ sys/arch/arm/arm/cpufunc_asm_armv6.S	2 Feb 2024 22:34:06 -0000
+@@ -0,0 +1,92 @@
++#include <machine/asm.h>
++#include <arm/armreg.h>
++#include <arm/sysreg.h>
++
++ENTRY(armv6_flush_bp)
++	mcr	CP15_BPIALL
++	mov	pc, lr
++
++ENTRY(armv6_periphbase)
++        mrc     CP15_CBAR(r0)
++        mov     pc, lr
++
++ENTRY(armv6_drain_writebuf)
++	mcr     p15, 0, r0, c7, c10, 4
++	mov     pc, lr
++
++
++/* Suitable default for a uniprocessor kernel. */
++#define TTBR_DEFAULT	(TTBR_IRGN_WBNWA | TTBR_RGN_WBNWA)
++
++/*
++ * Functions to set the MMU Translation Table Base register
++ */
++ENTRY(armv6_setttb)
++        cmp     r1, #0
++        /* wbinv entire L1 I$ and D$ caches */
++        movne   r2, #0
++        mcrne   p15, 0, r2, c7, c0, 0
++        /* Write the TTB */
++        mcr     p15, 0, r0, c2, c0, 0
++        /* If we have updated the TTB we must flush the TLB */
++        mcrne   p15, 0, r0, c5, c0, 0
++        /* For good measure we will flush the IDC as well */
++        mcrne   p15, 0, r0, c7, c0, 0
++        /* Make sure that pipeline is emptied */
++        mov     r0, r0
++        mov     r0, r0
++        mov pc, lr
++
++/*
++ * TLB functions
++ */
++ENTRY(armv6_tlb_flush)
++	mcr     p15, 0, r0, c5, c0, 0
++	mov     pc, lr
++
++ENTRY(armv6_tlb_purge)
++	mcr     p15, 0, r0, c6, c0, 0
++	mov     pc, lr
++
++ENTRY(armv6_tlb_flush_SE)
++	mcr     p15, 0, r0, c5, c0, 0
++	mov     pc, lr
++
++ENTRY(armv6_tlb_purge_SE)
++	mcr     p15, 0, r0, c6, c0, 0
++	mov     pc, lr
++
++/*
++ * Cache operations.  For the entire cache we use the set/index
++ * operations.
++ */
++ENTRY(armv6_cache_flush)
++	mcr     p15, 0, r0, c7, c0, 0
++	mov     pc, lr
++
++/*
++ * Context switch.
++ *
++ * These is the CPU-specific parts of the context switcher cpu_switch()
++ * These functions actually perform the TTB reload.
++ *
++ * NOTE: Special calling convention
++ *	r1, r4-r13 must be preserved
++ */
++ENTRY(armv6_context_switch)
++	/* For good measure we will flush the IDC as well */
++	mcr     p15, 0, r0, c7, c0, 0   /* flush cache */
++
++	/* Write the TTB */
++	mcr     p15, 0, r0, c2, c0, 0
++
++        /* If we have updated the TTB we must flush the TLB */
++	mcr     p15, 0, r0, c5, c0, 0
++
++        /* For good measure we will flush the IDC as well */
++	mcr     p15, 0, r0, c7, c0, 0   /* flush cache */
++
++	/* Make sure that pipeline is emptied */
++	mov     r0, r0
++	mov     r0, r0
++	mov     pc, lr

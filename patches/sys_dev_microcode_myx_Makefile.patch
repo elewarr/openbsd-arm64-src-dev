@@ -1,0 +1,15 @@
+Index: sys/dev/microcode/myx/Makefile
+===================================================================
+RCS file: /cvs/src/sys/dev/microcode/myx/Makefile,v
+retrieving revision 1.6
+diff -u -p -r1.6 Makefile
+--- sys/dev/microcode/myx/Makefile	3 Oct 2021 00:48:45 -0000	1.6
++++ sys/dev/microcode/myx/Makefile	2 Feb 2024 22:34:40 -0000
+@@ -3,6 +3,7 @@
+ NOPROG=
+ NOMAN=
+ CC=${HOSTCC}
++CFLAGS:=
+ LDADD=-lz
+ DPADD=${LIBZ}
+ 

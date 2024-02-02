@@ -2,23 +2,25 @@
 set -e
 set -o xtrace
 
+. "$(dirname $(readlink -f $0))/.env"
+
 if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    echo CROSS_OPENBSD_SRC_HOME is missing
    exit 1
 fi
 
-. "$(dirname $(readlink -f $0))/cross_env"
+. "$(dirname $(readlink -f $0))/.cross_env"
 
 if [ -d "${destdir}" ]; then
-    rm -rf "${destdir}"
+    doas rm -rf "${destdir}"
 fi
 
 if [ -d "${objdir}" ]; then
-    rm "${objdir}"
+    doas rm "${objdir}"
 fi
 
 if [ -d "${toolsdir}" ]; then
-    rm "${toolsdir}"
+    doas rm "${toolsdir}"
 fi
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -35,10 +37,10 @@ fi
 ln -s "${BRANCH}" "src"
 
 cd "${CROSS_OPENBSD_SRC_HOME}/src"
-doas make clean && \
-    doas make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-dirs -j${JOBS} && \
-    doas make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-tools -j ${JOBS} && \
-    doas make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-distrib -j ${JOBS}
+doas make clean
+doas make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-dirs -j${JOBS}
+doas make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-tools -j ${JOBS}
+#    doas make -f Makefile.cross TARGET=${target} CROSSDIR="${destdir}" cross-distrib -j ${JOBS}
 cd -
 
 doas chown -R ${USER}:wobj "${destdir}"

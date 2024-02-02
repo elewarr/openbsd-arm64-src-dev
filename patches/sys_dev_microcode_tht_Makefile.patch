@@ -1,0 +1,15 @@
+Index: sys/dev/microcode/tht/Makefile
+===================================================================
+RCS file: /cvs/src/sys/dev/microcode/tht/Makefile,v
+retrieving revision 1.5
+diff -u -p -r1.5 Makefile
+--- sys/dev/microcode/tht/Makefile	3 Oct 2021 00:48:45 -0000	1.5
++++ sys/dev/microcode/tht/Makefile	2 Feb 2024 22:34:47 -0000
+@@ -3,6 +3,7 @@
+ NOPROG=
+ NOMAN=
+ CC=${HOSTCC}
++CFLAGS:=
+ 
+ FIRM=	tht
+ 

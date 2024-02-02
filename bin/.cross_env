@@ -1,10 +1,10 @@
 #!/usr/bin/env ksh
 
-target=arm64
-toolstarget=aarch64-unknown
+target=armv7
+toolstarget=armv7-unknown
 topdir=${CROSS_OPENBSD_SRC_HOME}
 srcdir=${topdir}/src
 destdir=${topdir}/dest.${target}
 objdir=${topdir}/obj.${target}
 toolsdir=${topdir}/tools.${target}
-kconf=GENERIC.MP
+kconf=GENERIC

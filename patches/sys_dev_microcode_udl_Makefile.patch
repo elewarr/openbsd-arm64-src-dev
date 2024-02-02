@@ -1,0 +1,15 @@
+Index: sys/dev/microcode/udl/Makefile
+===================================================================
+RCS file: /cvs/src/sys/dev/microcode/udl/Makefile,v
+retrieving revision 1.12
+diff -u -p -r1.12 Makefile
+--- sys/dev/microcode/udl/Makefile	3 Oct 2021 00:48:46 -0000	1.12
++++ sys/dev/microcode/udl/Makefile	2 Feb 2024 22:34:54 -0000
+@@ -3,6 +3,7 @@
+ NOPROG=
+ NOMAN=
+ CC=${HOSTCC}
++CFLAGS:=
+ 
+ FIRM=	udl_huffman
+ 

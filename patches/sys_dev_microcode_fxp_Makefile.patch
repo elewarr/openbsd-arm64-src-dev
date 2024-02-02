@@ -1,0 +1,15 @@
+Index: sys/dev/microcode/fxp/Makefile
+===================================================================
+RCS file: /cvs/src/sys/dev/microcode/fxp/Makefile,v
+retrieving revision 1.9
+diff -u -p -r1.9 Makefile
+--- sys/dev/microcode/fxp/Makefile	3 Oct 2021 00:48:45 -0000	1.9
++++ sys/dev/microcode/fxp/Makefile	2 Feb 2024 22:34:37 -0000
+@@ -3,6 +3,7 @@
+ NOPROG=
+ NOMAN=
+ CC=${HOSTCC}
++CFLAGS:=
+ 
+ FIRM=  fxp-d101a fxp-d101b0 fxp-d101ma fxp-d101s fxp-d102 fxp-d102c fxp-d102e
+ 

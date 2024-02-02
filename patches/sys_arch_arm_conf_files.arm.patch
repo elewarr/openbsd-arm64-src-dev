@@ -1,0 +1,40 @@
+Index: sys/arch/arm/conf/files.arm
+===================================================================
+RCS file: /cvs/src/sys/arch/arm/conf/files.arm,v
+retrieving revision 1.51
+diff -u -p -r1.51 files.arm
+--- sys/arch/arm/conf/files.arm	1 Jan 2024 18:25:50 -0000	1.51
++++ sys/arch/arm/conf/files.arm	2 Feb 2024 22:34:18 -0000
+@@ -45,6 +45,7 @@ file	arch/arm/arm/copystr.S
+ file	arch/arm/arm/cpufunc.c
+ file	arch/arm/arm/cpufunc_asm.S
+ file	arch/arm/arm/cpufunc_asm_armv7.S	cpu_armv7
++file	arch/arm/arm/cpufunc_asm_armv6.S	cpu_armv6
+ file	arch/arm/arm/process_machdep.c
+ file	arch/arm/arm/sig_machdep.c
+ file	arch/arm/arm/sigcode.S
+@@ -56,19 +57,19 @@ file	arch/arm/arm/vectors.S
+ file	arch/arm/arm/arm32_machdep.c
+ file	arch/arm/arm/bus_dma.c
+ file	arch/arm/arm/cpu.c
+-file	arch/arm/arm/cpuswitch7.S		cpu_armv7
++file	arch/arm/arm/cpuswitch7.S		(cpu_armv7 | cpu_armv6)
+ file	arch/arm/arm/exception.S
+ file	arch/arm/arm/fault.c
+ file	arch/arm/arm/mem.c
+-file	arch/arm/arm/pmap7.c			cpu_armv7
++file	arch/arm/arm/pmap7.c			(cpu_armv7 | cpu_armv6)
+ file	arch/arm/arm/setstack.S
+ file	arch/arm/arm/stubs.c
+ file	arch/arm/arm/sys_machdep.c
+ file	arch/arm/arm/vm_machdep.c
+ 
+-file	arch/arm/armv7/armv7_space.c		cpu_armv7
+-file	arch/arm/armv7/bus_space_asm_armv7.S	cpu_armv7
+-file	arch/arm/arm/vfp.c			cpu_armv7
++file	arch/arm/armv7/armv7_space.c		(cpu_armv7 | cpu_armv6)
++file	arch/arm/armv7/bus_space_asm_armv7.S	(cpu_armv7 | cpu_armv6)
++file	arch/arm/arm/vfp.c			(cpu_armv7 | cpu_armv6)
+ 
+ pseudo-device	openprom
+ file	arch/arm/arm/openprom.c			openprom needs-flag

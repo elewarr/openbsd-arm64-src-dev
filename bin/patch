@@ -1,4 +1,8 @@
 #!/usr/bin/env ksh
+#set -e
+set -o xtrace
+
+. "$(dirname $(readlink -f $0))/.env"
 
 if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    echo CROSS_OPENBSD_SRC_HOME is missing
@@ -46,3 +50,7 @@ for P in $(find "${CROSS_OPENBSD_SRC_HOME}/patches/" -type f -name "*.patch" -ma
         exit 1
     fi
 done
+
+cd "${CROSS_OPENBSD_SRC_HOME}"
+doas find . -type f -name "*.orig" -exec rm {} \;
+cd -

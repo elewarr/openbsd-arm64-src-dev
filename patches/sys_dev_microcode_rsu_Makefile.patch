@@ -1,0 +1,15 @@
+Index: sys/dev/microcode/rsu/Makefile
+===================================================================
+RCS file: /cvs/src/sys/dev/microcode/rsu/Makefile,v
+retrieving revision 1.1
+diff -u -p -r1.1 Makefile
+--- sys/dev/microcode/rsu/Makefile	4 Oct 2021 01:33:42 -0000	1.1
++++ sys/dev/microcode/rsu/Makefile	2 Feb 2024 22:34:43 -0000
+@@ -3,6 +3,7 @@
+ NOPROG=
+ NOMAN=
+ CC=${HOSTCC}
++CFLAGS:=
+ 
+ FIRM=	rsu-rtl8712
+ 

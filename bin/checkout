@@ -2,6 +2,8 @@
 set -e
 set -o xtrace
 
+. "$(dirname $(readlink -f $0))/.env"
+
 if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    echo CROSS_OPENBSD_SRC_HOME is missing
    exit 1

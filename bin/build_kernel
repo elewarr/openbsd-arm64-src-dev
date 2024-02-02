@@ -1,5 +1,7 @@
 #!/usr/bin/env ksh
 
+. "$(dirname $(readlink -f $0))/.env"
+
 if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    echo CROSS_OPENBSD_SRC_HOME is missing
    exit 1
@@ -18,7 +20,7 @@ fi
 
 ln -s "${BRANCH}" "src"
 
-. "$(dirname $(readlink -f $0))/cross_env"
+. "$(dirname $(readlink -f $0))/.cross_env"
 
 kobjdir="${objdir}/sys/arch/${target}/compile/${kconf}"
 

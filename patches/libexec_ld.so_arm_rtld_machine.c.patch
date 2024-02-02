@@ -1,0 +1,16 @@
+Index: libexec/ld.so/arm/rtld_machine.c
+===================================================================
+RCS file: /cvs/src/libexec/ld.so/arm/rtld_machine.c,v
+retrieving revision 1.42
+diff -u -p -r1.42 rtld_machine.c
+--- libexec/ld.so/arm/rtld_machine.c	8 Jan 2022 06:49:41 -0000	1.42
++++ libexec/ld.so/arm/rtld_machine.c	2 Feb 2024 22:34:01 -0000
+@@ -362,7 +362,7 @@ _dl_bind(elf_object_t *object, int relid
+ 		register long  arg3 __asm("r2") = 0xffffffff &  cookie;
+ 		register long  arg4 __asm("r3") = 0xffffffff & (cookie >> 32);
+ 
+-		__asm volatile("swi 0; dsb nsh; isb" : "+r" (arg1), "+r" (arg2)
++		__asm volatile("swi 0; nop; nop" : "+r" (arg1), "+r" (arg2)
+ 		    : "r" (syscall_num), "r" (arg3), "r" (arg4)
+ 		    : "cc", "memory");
+ 	}

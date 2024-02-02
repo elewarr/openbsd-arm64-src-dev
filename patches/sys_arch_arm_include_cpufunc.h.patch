@@ -1,0 +1,44 @@
+Index: sys/arch/arm/include/cpufunc.h
+===================================================================
+RCS file: /cvs/src/sys/arch/arm/include/cpufunc.h,v
+retrieving revision 1.34
+diff -u -p -r1.34 cpufunc.h
+--- sys/arch/arm/include/cpufunc.h	30 May 2023 08:30:00 -0000	1.34
++++ sys/arch/arm/include/cpufunc.h	2 Feb 2024 22:34:24 -0000
+@@ -218,6 +218,8 @@ u_int	cpufunc_dfar		(void);
+ u_int	cpufunc_ifsr		(void);
+ u_int	cpufunc_ifar		(void);
+ 
++#if defined(CPU_ARMv7)
++
+ void	armv7_setttb		(u_int);
+ 
+ void	armv7_tlb_flushID_SE	(u_int);
+@@ -249,6 +251,27 @@ void	armv7_dcache_wb_range		(vaddr_t, vs
+ 
+ void	armv7_idcache_wbinv_all		(void);
+ void	armv7_idcache_wbinv_range	(vaddr_t, vsize_t);
++
++#elif defined(CPU_ARMv6)
++
++u_int	armv6_periphbase	(void);
++
++void	armv6_setttb		(u_int);
++
++void	armv6_tlb_flush_SE 	(u_int);
++void	armv6_tlb_purge_SE	(u_int);
++void	armv6_tlb_flush 	(void);
++void	armv6_tlb_purge 	(void);
++
++void	armv6_cache_flush	(void);
++
++void	armv6_flush_bp(void);
++
++void	armv6_context_switch	(u_int);
++
++void	armv6_setup		(void);
++
++#endif /* CPU_ARMv6 */
+ 
+ extern unsigned armv7_dcache_sets_max;
+ extern unsigned armv7_dcache_sets_inc;

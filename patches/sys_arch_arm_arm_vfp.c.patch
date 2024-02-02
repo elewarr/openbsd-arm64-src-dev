@@ -1,0 +1,22 @@
+Index: sys/arch/arm/arm/vfp.c
+===================================================================
+RCS file: /cvs/src/sys/arch/arm/arm/vfp.c,v
+retrieving revision 1.5
+diff -u -p -r1.5 vfp.c
+--- sys/arch/arm/arm/vfp.c	29 Aug 2022 02:01:18 -0000	1.5
++++ sys/arch/arm/arm/vfp.c	2 Feb 2024 22:34:15 -0000
+@@ -58,7 +58,13 @@ vfp_init(void)
+ 	__asm volatile("mrc p15, 0, %0, c1, c0, 2" : "=r" (val));
+ 	val |= COPROC10 | COPROC11;
+ 	__asm volatile("mcr p15, 0, %0, c1, c0, 2" :: "r" (val));
+-	__asm volatile("isb");
++//	__asm volatile("isb");
++__asm__ __volatile__(
++    "mcr p15, 0, r0, c7, c5, 4     \n"  // Flush Prefetch Buffer
++    :
++    : "r" (0)
++    : "memory"
++);
+ }
+ 
+ void

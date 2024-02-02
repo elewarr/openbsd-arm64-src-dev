@@ -1,0 +1,18 @@
+Index: sys/arch/arm/arm/sigcode.S
+===================================================================
+RCS file: /cvs/src/sys/arch/arm/arm/sigcode.S,v
+retrieving revision 1.14
+diff -u -p -r1.14 sigcode.S
+--- sys/arch/arm/arm/sigcode.S	12 Dec 2023 07:37:20 -0000	1.14
++++ sys/arch/arm/arm/sigcode.S	2 Feb 2024 22:34:13 -0000
+@@ -59,8 +59,8 @@ sigcode:
+ 	.globl	sigcodecall
+ sigcodecall:
+ 	swi	0
+-	dsb	nsh
+-	isb
++//	dsb	nsh
++//	isb
+ 	.globl  sigcoderet
+ sigcoderet:
+ 	.global esigcode

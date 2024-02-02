@@ -1,0 +1,15 @@
+Index: sys/dev/microcode/rum/Makefile
+===================================================================
+RCS file: /cvs/src/sys/dev/microcode/rum/Makefile,v
+retrieving revision 1.19
+diff -u -p -r1.19 Makefile
+--- sys/dev/microcode/rum/Makefile	3 Oct 2021 00:48:45 -0000	1.19
++++ sys/dev/microcode/rum/Makefile	2 Feb 2024 22:34:46 -0000
+@@ -3,6 +3,7 @@
+ NOPROG=
+ NOMAN=
+ CC=${HOSTCC}
++CFLAGS:=
+ 
+ FIRM=	rum-rt2573 run-rt2870 run-rt3071
+ 

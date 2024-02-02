@@ -1,0 +1,39 @@
+Index: gnu/lib/libcompiler_rt/Makefile
+===================================================================
+RCS file: /cvs/src/gnu/lib/libcompiler_rt/Makefile,v
+retrieving revision 1.6
+diff -u -p -r1.6 Makefile
+--- gnu/lib/libcompiler_rt/Makefile	28 Dec 2021 15:45:17 -0000	1.6
++++ gnu/lib/libcompiler_rt/Makefile	2 Feb 2024 22:33:52 -0000
+@@ -96,7 +96,6 @@ GEN_SRCS=	absvdi2 \
+ 		lshrdi3 \
+ 		lshrti3 \
+ 		moddi3 \
+-		modsi3 \
+ 		modti3 \
+ 		muldc3 \
+ 		muldi3 \
+@@ -142,7 +141,6 @@ GEN_SRCS=	absvdi2 \
+ 		udivmodti4 \
+ 		udivti3 \
+ 		umoddi3 \
+-		umodsi3 \
+ 		umodti3
+ 
+ .if ${RTARCH} != "arm"
+@@ -160,12 +158,14 @@ GEN_SRCS+=	adddf3 \
+ 		fixunssfdi \
+ 		floatsidf \
+ 		floatsisf \
++		modsi3 \
+ 		muldf3 \
+ 		mulsf3 \
+ 		subdf3 \
+ 		subsf3 \
+ 		truncdfsf2 \
+-		udivsi3
++		udivsi3 \
++		umodsi3
+ .endif
+ 
+ .if ${RTARCH} == "i386"

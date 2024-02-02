@@ -1,0 +1,15 @@
+#!/usr/bin/env ksh
+set -e
+set -o xtrace
+
+. "$(dirname $(readlink -f $0))/.env"
+
+if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
+   echo CROSS_OPENBSD_SRC_HOME is missing
+   exit 1
+fi
+
+cd "${CROSS_OPENBSD_SRC_HOME}/src"
+rm ./TAGS || true
+find . -type f -name "*.[chsS]" -print | etags -
+cd -

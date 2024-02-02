@@ -1,0 +1,15 @@
+Index: sys/dev/microcode/rtwn/Makefile
+===================================================================
+RCS file: /cvs/src/sys/dev/microcode/rtwn/Makefile,v
+retrieving revision 1.1
+diff -u -p -r1.1 Makefile
+--- sys/dev/microcode/rtwn/Makefile	4 Oct 2021 01:33:42 -0000	1.1
++++ sys/dev/microcode/rtwn/Makefile	2 Feb 2024 22:34:44 -0000
+@@ -3,6 +3,7 @@
+ NOPROG=
+ NOMAN=
+ CC=${HOSTCC}
++CFLAGS:=
+ 
+ FIRM=	rtwn-rtl8188e rtwn-rtl8192cU rtwn-rtl8192cU_B rtwn-rtl8723 \
+ 	rtwn-rtl8723_B

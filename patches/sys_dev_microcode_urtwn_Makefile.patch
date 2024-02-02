@@ -1,0 +1,15 @@
+Index: sys/dev/microcode/urtwn/Makefile
+===================================================================
+RCS file: /cvs/src/sys/dev/microcode/urtwn/Makefile,v
+retrieving revision 1.2
+diff -u -p -r1.2 Makefile
+--- sys/dev/microcode/urtwn/Makefile	28 Apr 2023 01:24:14 -0000	1.2
++++ sys/dev/microcode/urtwn/Makefile	2 Feb 2024 22:34:55 -0000
+@@ -3,6 +3,7 @@
+ NOPROG=
+ NOMAN=
+ CC=${HOSTCC}
++CFLAGS:=
+ 
+ FIRM=	urtwn-rtl8188eu urtwn-rtl8188ftv urtwn-rtl8192cT urtwn-rtl8192cU \
+ 	urtwn-rtl8192eu

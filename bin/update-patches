@@ -1,11 +1,19 @@
 #!/usr/bin/env ksh
+#set -e
+set -o xtrace
+
+. "$(dirname $(readlink -f $0))/.env"
 
 if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
    echo CROSS_OPENBSD_SRC_HOME is missing
    exit 1
 fi
 
-rm "${CROSS_OPENBSD_SRC_HOME}/patches/"*.patch
+if [ ! -d "${CROSS_OPENBSD_SRC_HOME}/patches" ]; then
+    mkdir "${CROSS_OPENBSD_SRC_HOME}/patches"
+fi
+
+rm "${CROSS_OPENBSD_SRC_HOME}/patches/"*.patch || true
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
