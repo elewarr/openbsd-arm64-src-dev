@@ -1,4 +1,6 @@
 #!/usr/bin/env ksh
+set -e
+set -o xtrace
 
 . "$(dirname $(readlink -f $0))/.env"
 

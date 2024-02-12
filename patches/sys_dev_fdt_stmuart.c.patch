@@ -1,0 +1,270 @@
+Index: sys/dev/fdt/stmuart.c
+===================================================================
+RCS file: sys/dev/fdt/stmuart.c
+diff -N sys/dev/fdt/stmuart.c
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ sys/dev/fdt/stmuart.c	12 Feb 2024 22:09:06 -0000
+@@ -0,0 +1,263 @@
++/*	$OpenBSD$	*/
++/*
++ * Copyright (c) 2024 Krystian Lewandowski <k.lewandowski@icloud.com>
++ * Copyright (c) 2019 Mark Kettenis <kettenis@openbsd.org>
++ *
++ * Permission to use, copy, modify, and distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <sys/param.h>
++#include <sys/conf.h>
++#include <sys/fcntl.h>
++#include <sys/proc.h>
++#include <sys/systm.h>
++#include <sys/tty.h>
++
++#include <machine/bus.h>
++#include <machine/fdt.h>
++
++#include <dev/cons.h>
++
++#include <dev/ofw/fdt.h>
++#include <dev/ofw/openfirm.h>
++
++#define UART_SPACE			0x0400
++
++#define UART_TDR			0x0028
++#define UART_RDR			0x0024
++#define UART_ISR			0x001C
++#define  UART_STATUS_TXFNF      	(1 << 7)
++#define  UART_STATUS_RXFNE              (1 << 5)
++
++#define DEVUNIT(x)      (minor(x) & 0x7f)
++#define DEVCUA(x)       (minor(x) & 0x80)
++
++cdev_decl(com);
++cdev_decl(stmuart);
++
++struct cdevsw stmuartdev = cdev_tty_init(3, stmuart);
++
++struct stmuart_softc {
++	struct device		sc_dev;
++	bus_space_tag_t		sc_iot;
++	bus_space_handle_t	sc_ioh;
++
++	struct soft_intrhand	*sc_si;
++	void			*sc_ih;
++
++	struct tty		*sc_tty;
++	int			sc_conspeed;
++};
++
++int	stmuart_match(struct device *, void *, void *);
++void	stmuart_attach(struct device *, struct device *, void *);
++
++struct cfdriver stmuart_cd = {
++	NULL, "stmuart", DV_TTY
++};
++
++const struct cfattach stmuart_ca = {
++	sizeof(struct stmuart_softc), stmuart_match, stmuart_attach
++};
++
++bus_space_tag_t	stmuartconsiot;
++bus_space_handle_t stmuartconsioh;
++
++struct stmuart_softc *stmuart_sc(dev_t);
++
++int	stmuart_intr(void *);
++void	stmuart_softintr(void *);
++void	stmuart_start(struct tty *);
++
++int	stmuartcnattach(bus_space_tag_t, bus_addr_t);
++int	stmuartcngetc(dev_t);
++void	stmuartcnputc(dev_t, int);
++void	stmuartcnpollc(dev_t, int);
++
++void
++stmuart_init_cons(void)
++{
++	struct fdt_reg reg;
++	void *node;
++
++	if ((node = fdt_find_cons("st,stm32h7-uart")) == NULL)
++		return;
++
++	if (fdt_get_reg(node, 0, &reg))
++		return;
++
++	stmuartcnattach(fdt_cons_bs_tag, reg.addr);
++	stmuartcnputc(0, 'Q');
++}
++
++int
++stmuart_match(struct device *parent, void *match, void *aux)
++{
++	struct fdt_attach_args *faa = aux;
++
++	return OF_is_compatible(faa->fa_node, "stm,stm32h7-uart");
++}
++
++void
++stmuart_attach(struct device *parent, struct device *self, void *aux)
++{
++	struct stmuart_softc *sc = (struct stmuart_softc *)self;
++	struct fdt_attach_args *faa = aux;
++	uint32_t reg;
++	int maj;
++
++	if (faa->fa_nreg < 1) {
++		printf(": no registers\n");
++		return;
++	}
++
++	sc->sc_iot = faa->fa_iot;
++	if (bus_space_map(sc->sc_iot, faa->fa_reg[0].addr,
++	    faa->fa_reg[0].size, 0, &sc->sc_ioh)) {
++		printf(": can't map registers\n");
++		return;
++	}
++
++	if (faa->fa_node == stdout_node) {
++		/* Locate the major number. */
++		for (maj = 0; maj < nchrdev; maj++)
++			if (cdevsw[maj].d_open == stmuartopen)
++				break;
++		cn_tab->cn_dev = makedev(maj, sc->sc_dev.dv_unit);
++		sc->sc_conspeed = stdout_speed;
++		printf(": console");
++	}
++
++	sc->sc_si = softintr_establish(IPL_TTY, stmuart_softintr, sc);
++	if (sc->sc_si == NULL) {
++		printf(": can't establish soft interrupt\n");
++		return;
++	}
++
++	sc->sc_ih = fdt_intr_establish_idx(faa->fa_node, 0, IPL_TTY,
++	    stmuart_intr, sc, sc->sc_dev.dv_xname);
++	if (sc->sc_ih == NULL) {
++		printf(": can't establish hard interrupt\n");
++		return;
++	}
++	
++	(void)reg;
++	printf("\n");
++}
++
++int
++stmuart_intr(void *arg)
++{
++	return ENODEV;
++}
++
++void
++stmuart_softintr(void *arg)
++{
++}
++
++int
++stmuartopen(dev_t dev, int flag, int mode, struct proc *p)
++{
++
++	return ENODEV;
++}
++
++int
++stmuartclose(dev_t dev, int flag, int mode, struct proc *p)
++{
++	return ENODEV;
++}
++
++int
++stmuartread(dev_t dev, struct uio *uio, int flag)
++{
++	return ENODEV;
++}
++
++int
++stmuartwrite(dev_t dev, struct uio *uio, int flag)
++{
++	return ENODEV;
++}
++
++int
++stmuartioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
++{
++	return ENODEV;
++}
++
++int
++stmuartstop(struct tty *tp, int flag)
++{
++	return 0;
++}
++
++struct tty *
++stmuarttty(dev_t dev)
++{
++	return NULL;
++}
++
++int
++stmuartcnattach(bus_space_tag_t iot, bus_addr_t iobase)
++{
++	static struct consdev stmuartcons = {
++		NULL, NULL, stmuartcngetc, stmuartcnputc, stmuartcnpollc, NULL,
++		NODEV, CN_MIDPRI
++	};
++	int maj;
++
++	stmuartconsiot = iot;
++	if (bus_space_map(iot, iobase, UART_SPACE, 0, &stmuartconsioh))
++		return ENOMEM;
++
++	/* Look for major of com(4) to replace. */
++	for (maj = 0; maj < nchrdev; maj++)
++		if (cdevsw[maj].d_open == comopen)
++			break;
++	if (maj == nchrdev)
++		return ENXIO;
++
++	cn_tab = &stmuartcons;
++	cn_tab->cn_dev = makedev(maj, 0);
++	cdevsw[maj] = stmuartdev; 	/* KLUDGE */
++
++	return 0;
++}
++
++int
++stmuartcngetc(dev_t dev)
++{
++	uint8_t c;
++	
++	while ((bus_space_read_4(stmuartconsiot, stmuartconsioh, UART_ISR) &
++	    UART_STATUS_RXFNE) == 0)
++		CPU_BUSY_CYCLE();
++	c = bus_space_read_4(stmuartconsiot, stmuartconsioh, UART_RDR);
++	return c;
++}
++
++void
++stmuartcnputc(dev_t dev, int c)
++{
++	while ((bus_space_read_4(stmuartconsiot, stmuartconsioh, UART_ISR) &
++	    UART_STATUS_TXFNF) == 0)
++		CPU_BUSY_CYCLE();
++	bus_space_write_4(stmuartconsiot, stmuartconsioh, UART_TDR, c);
++}
++
++void
++stmuartcnpollc(dev_t dev, int on)
++{
++}

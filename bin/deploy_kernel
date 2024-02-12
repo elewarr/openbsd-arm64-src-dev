@@ -1,7 +1,23 @@
 #!/usr/bin/env ksh
+set -e
+set -o xtrace
 
-scp ./dest.armv7/usr/obj/sys/arch/armv7/compile/DEBUG/bsd.gdb \
-    root@192.168.54.100:/
-ssh krle@192.168.54.100 'doas shutdown -h now'
-# ssh krle@192.168.54.100 'doas scp /home/krle/bsd.gdb /bsd && doas shutdown -h now'
-[A
+cleanup() {
+	doas umount /mnt
+	exit $?
+}
+
+tmpdir="$(mktemp)"
+trap "cleanup" EXIT
+. "$(dirname $(readlink -f $0))/.env"
+
+if [ -z "${CROSS_OPENBSD_SRC_HOME}" ]; then
+	echo CROSS_OPENBSD_SRC_HOME is missing
+	exit 1
+fi
+
+#cleanup || true
+
+doas mount /dev/sd1a /mnt
+doas cp "${CROSS_OPENBSD_SRC_HOME}/dest.armv7/usr/obj/sys/arch/armv7/compile/DEBUG/bsd" "/mnt/bsd"
+ls -la /mnt

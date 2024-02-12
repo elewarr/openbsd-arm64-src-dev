@@ -3,7 +3,7 @@ Index: sys/arch/armv7/conf/DEBUG
 RCS file: sys/arch/armv7/conf/DEBUG
 diff -N sys/arch/armv7/conf/DEBUG
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ sys/arch/armv7/conf/DEBUG	12 Feb 2024 18:15:55 -0000
++++ sys/arch/armv7/conf/DEBUG	12 Feb 2024 22:09:00 -0000
 @@ -0,0 +1,425 @@
 +#	$OpenBSD: GENERIC,v 1.142 2023/03/12 10:50:06 jmatthew Exp $
 +#

@@ -1,0 +1,16 @@
+Index: sys/dev/fdt/files.fdt
+===================================================================
+RCS file: /cvs/src/sys/dev/fdt/files.fdt,v
+retrieving revision 1.199
+diff -u -p -r1.199 files.fdt
+--- sys/dev/fdt/files.fdt	16 Jan 2024 23:37:50 -0000	1.199
++++ sys/dev/fdt/files.fdt	12 Feb 2024 22:09:05 -0000
+@@ -772,3 +772,8 @@ file	dev/fdt/qcsdam.c		qcsdam
+ device	tipd
+ attach	tipd at i2c
+ file	dev/fdt/tipd.c		tipd
++
++# STM32MP1
++device	stmuart
++attach	stmuart at fdt
++file	dev/fdt/stmuart.c		stmuart
