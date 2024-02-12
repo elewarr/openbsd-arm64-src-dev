@@ -7,4 +7,4 @@ srcdir=${topdir}/src
 destdir=${topdir}/dest.${target}
 objdir=${topdir}/obj.${target}
 toolsdir=${topdir}/tools.${target}
-kconf=GENERIC
+kconf=DEBUG
