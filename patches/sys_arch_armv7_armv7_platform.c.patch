@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/arch/armv7/armv7/platform.c,v
 retrieving revision 1.27
 diff -u -p -r1.27 platform.c
 --- sys/arch/armv7/armv7/platform.c	16 May 2021 03:39:28 -0000	1.27
-+++ sys/arch/armv7/armv7/platform.c	12 Feb 2024 22:08:58 -0000
++++ sys/arch/armv7/armv7/platform.c	14 Feb 2024 11:29:59 -0000
 @@ -33,6 +33,7 @@ void	agtimer_init(void);
  extern void	cduart_init_cons(void);
  extern void	exuart_init_cons(void);

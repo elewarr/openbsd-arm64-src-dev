@@ -4,7 +4,7 @@ RCS file: /cvs/src/sys/arch/armv7/conf/RAMDISK,v
 retrieving revision 1.130
 diff -u -p -r1.130 RAMDISK
 --- sys/arch/armv7/conf/RAMDISK	2 Mar 2023 09:59:29 -0000	1.130
-+++ sys/arch/armv7/conf/RAMDISK	12 Feb 2024 22:09:03 -0000
++++ sys/arch/armv7/conf/RAMDISK	14 Feb 2024 11:30:03 -0000
 @@ -213,6 +213,9 @@ rkpmic*		at iic?			# RK808 PMIC
  tpspmic*	at iic?
  pcagpio*	at iic?

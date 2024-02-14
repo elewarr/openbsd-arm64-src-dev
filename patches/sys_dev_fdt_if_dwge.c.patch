@@ -1,0 +1,18 @@
+Index: sys/dev/fdt/if_dwge.c
+===================================================================
+RCS file: /cvs/src/sys/dev/fdt/if_dwge.c,v
+retrieving revision 1.22
+diff -u -p -r1.22 if_dwge.c
+--- sys/dev/fdt/if_dwge.c	8 Feb 2024 20:50:34 -0000	1.22
++++ sys/dev/fdt/if_dwge.c	14 Feb 2024 11:30:07 -0000
+@@ -382,7 +382,9 @@ dwge_match(struct device *parent, void *
+ 	    OF_is_compatible(faa->fa_node, "rockchip,rk3308-mac") ||
+ 	    OF_is_compatible(faa->fa_node, "rockchip,rk3328-gmac") ||
+ 	    OF_is_compatible(faa->fa_node, "rockchip,rk3399-gmac") ||
+-	    OF_is_compatible(faa->fa_node, "snps,dwmac"));
++	    OF_is_compatible(faa->fa_node, "snps,dwmac") ||
++	    OF_is_compatible(faa->fa_node, "st,stm32mp1-dwmac") ||
++    	    OF_is_compatible(faa->fa_node, "snps,dwmac-4.20a"));
+ }
+ 
+ void

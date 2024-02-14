@@ -19,5 +19,6 @@ fi
 #cleanup || true
 
 doas mount /dev/sd1a /mnt
-doas cp "${CROSS_OPENBSD_SRC_HOME}/dest.armv7/usr/obj/sys/arch/armv7/compile/DEBUG/bsd" "/mnt/bsd"
+doas cp "${CROSS_OPENBSD_SRC_HOME}/dest.armv7/usr/obj/sys/arch/armv7/compile/DEBUG/bsd.gdb" "/mnt/bsd"
 ls -la /mnt
+sync

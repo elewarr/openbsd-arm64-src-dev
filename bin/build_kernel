@@ -16,11 +16,13 @@ if [ -z "${BRANCH}" ]; then
     exit 1
 fi
 
+cd "${CROSS_OPENBSD_SRC_HOME}"
 if [ -h "src" ]; then
     rm "src"
 fi
 
 ln -s "${BRANCH}" "src"
+cd -
 
 . "$(dirname $(readlink -f $0))/.cross_env"
 

@@ -3,8 +3,8 @@ Index: sys/arch/armv7/conf/DEBUG
 RCS file: sys/arch/armv7/conf/DEBUG
 diff -N sys/arch/armv7/conf/DEBUG
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ sys/arch/armv7/conf/DEBUG	12 Feb 2024 22:09:00 -0000
-@@ -0,0 +1,425 @@
++++ sys/arch/armv7/conf/DEBUG	14 Feb 2024 11:30:00 -0000
+@@ -0,0 +1,427 @@
 +#	$OpenBSD: GENERIC,v 1.142 2023/03/12 10:50:06 jmatthew Exp $
 +#
 +# For further information on compiling OpenBSD kernels, see the config(8)
@@ -231,6 +231,8 @@ diff -N sys/arch/armv7/conf/DEBUG
 +
 +# STM32MP1
 +stmuart*	at fdt?
++stmdog*		at fdt?			# watchdog timer
++stmpwr*		at fdt?
 +
 +# I2C devices
 +abcrtc*		at iic?			# Abracon x80x RTC

@@ -1,8 +1,9 @@
 /.idea/
 *~
-/dest.*
-/obj.*
-/tools.*
+/dest.armv7
+/obj.armv7
+/tools.armv7
 /src
 /master
-/tmp/
+/stm32
+/tmp

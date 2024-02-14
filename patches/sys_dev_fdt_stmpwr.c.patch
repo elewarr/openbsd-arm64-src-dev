@@ -1,0 +1,97 @@
+Index: sys/dev/fdt/stmpwr.c
+===================================================================
+RCS file: sys/dev/fdt/stmpwr.c
+diff -N sys/dev/fdt/stmpwr.c
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ sys/dev/fdt/stmpwr.c	14 Feb 2024 11:30:11 -0000
+@@ -0,0 +1,90 @@
++/* $OpenBSD$ */
++/*
++ * Copyright (c) 2024 Krystian Lewandowski <k.lewandowski@icloud.com>
++ *
++ * Permission to use, copy, modify, and distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <sys/param.h>
++#include <sys/systm.h>
++#include <sys/device.h>
++
++#include <machine/bus.h>
++#include <machine/fdt.h>
++
++#include <dev/ofw/openfirm.h>
++#include <dev/ofw/fdt.h>
++
++#include <dev/fdt/stm32mp1.h>
++
++#define PWR_CR1 			0x0000
++#define  CR1_DBP                 	(1 << 8)
++
++struct stmpwr_softc {
++	struct device		sc_dev;
++	bus_space_tag_t		sc_iot;
++	bus_space_handle_t	sc_ioh;
++};
++
++int stmpwr_match(struct device *, void *, void *);
++void stmpwr_attach(struct device *, struct device *, void *);
++int stmpwr_activate(struct device *self, int act);
++
++struct cfdriver stmpwr_cd = {
++	NULL, "stmpwr", DV_DULL
++};
++
++const struct cfattach stmpwr_ca = {
++	sizeof (struct stmpwr_softc), stmpwr_match, stmpwr_attach,
++	NULL, stmpwr_activate
++};
++
++int
++stmpwr_match(struct device *parent, void *match, void *aux)
++{
++	struct fdt_attach_args *faa = aux;
++	return (OF_is_compatible(faa->fa_node, "st,stm32mp1,pwr-reg"));
++}
++
++void
++stmpwr_attach(struct device *parent, struct device *self, void *aux)
++{
++	struct stmpwr_softc *sc = (struct stmpwr_softc *)self;
++	struct fdt_attach_args *faa = aux;
++
++	if (faa->fa_nreg < 1) {
++		printf(": no registers\n");
++		return;
++	}
++
++	sc->sc_iot = faa->fa_iot;
++	if (bus_space_map(sc->sc_iot, faa->fa_reg[0].addr,
++	    faa->fa_reg[0].size, 0, &sc->sc_ioh)) {
++		printf(": can't map registers\n");
++		return;
++	}
++
++	// disable backup domain write protection
++//	STMSET4(sc, PWR_CR1, CR1_DBP);
++//	while((STMREAD4(sc, PWR_CR1) & CR1_DBP) == 0)
++		;
++	
++	printf("\n");
++}
++
++int
++stmpwr_activate(struct device *self, int act)
++{
++  printf("::: stmpwr_activate: %d\n", act);
++	return ENODEV;
++}
