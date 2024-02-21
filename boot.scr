@@ -1,0 +1,1 @@
+load mmc 0:4 0xc2000040 efi/boot/bootarm.efi; bootefi 0xc2000040
